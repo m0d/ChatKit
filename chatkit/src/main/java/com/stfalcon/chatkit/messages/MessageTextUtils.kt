@@ -76,6 +76,8 @@ class MessageTextUtils {
                     }
                 }
             }
+
+            textToSpan += textToCheck
             val spannableString = SpannableString(textToSpan)
 
             descriptors.forEach{ url ->
