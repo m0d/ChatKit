@@ -1,12 +1,15 @@
 package com.stfalcon.chatkit.messages;
 
+import android.graphics.Color;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewCompat;
 import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.util.SparseArray;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -527,7 +530,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                text.setText(message.getText());
+                applyTextTransformation(text, message.getText(), Gravity.LEFT);
             }
         }
 
@@ -550,6 +553,19 @@ public class MessageHolders {
                 text.setLinkTextColor(style.getIncomingTextLinkColor());
                 configureLinksBehavior(text);
             }
+        }
+    }
+
+    public static void applyTextTransformation(TextView textView, String text, int gravity){
+        List<MessageTextUtils.UrlDescriptor> textUrls = MessageTextUtils.Companion.getTextUrls(text);
+        if(!textUrls.isEmpty()){
+            SpannableString sText = MessageTextUtils.Companion.transform(text, textUrls,
+                    gravity == Gravity.LEFT ? Color.parseColor("#42a1f4") :  Color.parseColor("#ffa79e")
+            );
+            textView.setText(sText);
+            textView.setMovementMethod(LinkMovementMethod.getInstance());
+        }else{
+            textView.setText(text);
         }
     }
 
@@ -576,7 +592,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                text.setText(message.getText());
+                applyTextTransformation(text, message.getText(), Gravity.RIGHT);
             }
         }
 
