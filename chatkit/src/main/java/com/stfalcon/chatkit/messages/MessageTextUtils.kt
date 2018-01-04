@@ -59,8 +59,15 @@ class MessageTextUtils {
                                 url.label
                             )
                         )
-                        textToCheck = if(parts.size > 1){
-                            parts[1]
+                        textToCheck = if(parts.size > 1) {
+                            var rest = ""
+                            (1 until parts.size).forEach {
+                                if(it > 1){
+                                    rest += url.toTag()
+                                }
+                                rest += parts[it]
+                            }
+                            rest
                         }else{
                             ""
                         }
