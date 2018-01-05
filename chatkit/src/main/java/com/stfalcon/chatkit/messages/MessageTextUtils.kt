@@ -44,7 +44,7 @@ class MessageTextUtils {
         fun transform(text: String, urls: MutableList<UrlDescriptor>, color: Int) : SpannableString {
             val descriptors : MutableList<UrlSpanDescriptor> = mutableListOf()
             var textToSpan = ""
-            var urlText    = ""
+            var urlText: String
             var textToCheck = text
             urls.forEach{ url ->
                 urlText = url.toTag()

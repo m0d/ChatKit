@@ -17,5 +17,7 @@
     <color name="green_dark">#2da346</color>
     <color name="red">#e94f4f</color>
     <color name="brown">#4e342e</color>
+    <color name="incomint_message_link_color">#42a1f4</color>
+    <color name="outgoing_message_link_color">#ffa79e</color>
 
 </resources>

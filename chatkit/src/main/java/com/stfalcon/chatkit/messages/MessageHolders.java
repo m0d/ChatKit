@@ -1,6 +1,6 @@
 package com.stfalcon.chatkit.messages;
 
-import android.graphics.Color;
+import android.annotation.SuppressLint;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewCompat;
@@ -518,8 +518,8 @@ public class MessageHolders {
 
         public IncomingTextMessageViewHolder(View itemView) {
             super(itemView);
-            bubble = (ViewGroup) itemView.findViewById(R.id.bubble);
-            text = (TextView) itemView.findViewById(R.id.messageText);
+            bubble = itemView.findViewById(R.id.bubble);
+            text = itemView.findViewById(R.id.messageText);
         }
 
         @Override
@@ -530,7 +530,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                applyTextTransformation(text, message.getText(), Gravity.LEFT);
+                applyTextTransformation(text, message.getText(), Gravity.START, mStyle);
             }
         }
 
@@ -556,11 +556,11 @@ public class MessageHolders {
         }
     }
 
-    public static void applyTextTransformation(TextView textView, String text, int gravity){
+    public static void applyTextTransformation(TextView textView, String text, int gravity, MessagesListStyle style){
         List<MessageTextUtils.UrlDescriptor> textUrls = MessageTextUtils.Companion.getTextUrls(text);
         if(!textUrls.isEmpty()){
-            SpannableString sText = MessageTextUtils.Companion.transform(text, textUrls,
-                    gravity == Gravity.LEFT ? Color.parseColor("#42a1f4") :  Color.parseColor("#ffa79e")
+            @SuppressLint("RtlHardcoded") SpannableString sText = MessageTextUtils.Companion.transform(text, textUrls,
+                    (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
             );
             textView.setText(sText);
             textView.setMovementMethod(LinkMovementMethod.getInstance());
@@ -580,8 +580,8 @@ public class MessageHolders {
 
         public OutcomingTextMessageViewHolder(View itemView) {
             super(itemView);
-            bubble = (ViewGroup) itemView.findViewById(R.id.bubble);
-            text = (TextView) itemView.findViewById(R.id.messageText);
+            bubble = itemView.findViewById(R.id.bubble);
+            text = itemView.findViewById(R.id.messageText);
         }
 
         @Override
@@ -592,7 +592,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                applyTextTransformation(text, message.getText(), Gravity.RIGHT);
+                applyTextTransformation(text, message.getText(), Gravity.END, mStyle);
             }
         }
 
@@ -629,7 +629,7 @@ public class MessageHolders {
 
         public IncomingImageMessageViewHolder(View itemView) {
             super(itemView);
-            image = (ImageView) itemView.findViewById(R.id.image);
+            image = itemView.findViewById(R.id.image);
             imageOverlay = itemView.findViewById(R.id.imageOverlay);
 
             if (image != null && image instanceof RoundedImageView) {
@@ -680,7 +680,7 @@ public class MessageHolders {
 
         public OutcomingImageMessageViewHolder(View itemView) {
             super(itemView);
-            image = (ImageView) itemView.findViewById(R.id.image);
+            image = itemView.findViewById(R.id.image);
             imageOverlay = itemView.findViewById(R.id.imageOverlay);
 
             if (image != null && image instanceof RoundedImageView) {
@@ -732,7 +732,7 @@ public class MessageHolders {
 
         public DefaultDateHeaderViewHolder(View itemView) {
             super(itemView);
-            text = (TextView) itemView.findViewById(R.id.messageText);
+            text = itemView.findViewById(R.id.messageText);
         }
 
         @Override
@@ -766,11 +766,13 @@ public class MessageHolders {
 
         protected TextView time;
         protected ImageView userAvatar;
+        protected MessagesListStyle mStyle;
+
 
         public BaseIncomingMessageViewHolder(View itemView) {
             super(itemView);
-            time = (TextView) itemView.findViewById(R.id.messageTime);
-            userAvatar = (ImageView) itemView.findViewById(R.id.messageUserAvatar);
+            time = itemView.findViewById(R.id.messageTime);
+            userAvatar = itemView.findViewById(R.id.messageUserAvatar);
         }
 
         @Override
@@ -793,6 +795,7 @@ public class MessageHolders {
 
         @Override
         public void applyStyle(MessagesListStyle style) {
+            mStyle = style;
             if (time != null) {
                 time.setTextColor(style.getIncomingTimeTextColor());
                 time.setTextSize(TypedValue.COMPLEX_UNIT_PX, style.getIncomingTimeTextSize());
@@ -814,10 +817,11 @@ public class MessageHolders {
             extends BaseMessageViewHolder<MESSAGE> implements DefaultMessageViewHolder {
 
         protected TextView time;
+        protected MessagesListStyle mStyle;
 
         public BaseOutcomingMessageViewHolder(View itemView) {
             super(itemView);
-            time = (TextView) itemView.findViewById(R.id.messageTime);
+            time = itemView.findViewById(R.id.messageTime);
         }
 
         @Override
@@ -829,6 +833,7 @@ public class MessageHolders {
 
         @Override
         public void applyStyle(MessagesListStyle style) {
+            mStyle = style;
             if (time != null) {
                 time.setTextColor(style.getOutcomingTimeTextColor());
                 time.setTextSize(TypedValue.COMPLEX_UNIT_PX, style.getOutcomingTimeTextSize());

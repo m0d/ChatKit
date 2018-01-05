@@ -38,3 +38,4 @@ android/proguard/
 .idea/
 build/
 .gradle
+*.bat

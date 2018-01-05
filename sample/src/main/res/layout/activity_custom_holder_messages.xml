@@ -10,6 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/input"
+        app:incomingTextLinkColor="@color/incomint_message_link_color"
+        app:outcomingTextLinkColor="@color/outgoing_message_link_color"
         app:incomingAvatarHeight="56dp"
         app:incomingAvatarWidth="56dp"
         app:incomingBubbleDrawable="@drawable/bg_custom_incoming_message"
