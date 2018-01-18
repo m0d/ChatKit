@@ -126,9 +126,9 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
 
     public IMessage getOldestMessage() {
         IMessage item = null;
-        for(Wrapper wrapper : items){
-            if(holders.getViewType(wrapper.item, senderId) != VIEW_TYPE_DATE_HEADER && wrapper.item instanceof IMessage){
-                item = (IMessage) wrapper.item;
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if(holders.getViewType(items.get(i).item, senderId) != VIEW_TYPE_DATE_HEADER && items.get(i).item instanceof IMessage){
+                item = (IMessage) items.get(i).item;
                 Timber.w("oldest text : %s", item.getText());
                 break;
             }
