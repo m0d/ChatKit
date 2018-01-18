@@ -27,6 +27,7 @@ android {
 task wrapper(type: Wrapper) {
     gradleVersion = '4.4.1'
 }
+
 ext {
     supportVersion = '27.0.2'
     picassoVersion = '2.5.2'

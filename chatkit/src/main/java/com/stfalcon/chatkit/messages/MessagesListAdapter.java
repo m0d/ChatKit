@@ -41,6 +41,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import static com.stfalcon.chatkit.messages.MessageHolders.VIEW_TYPE_DATE_HEADER;
+
 /**
  * Adapter for {@link MessagesList}.
  */
@@ -108,6 +110,16 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
                 getMessageLongClickListener(wrapper),
                 dateHeadersFormatter,
                 viewClickListenersArray);
+    }
+
+    public int getMessagesCount() {
+        int count = 0;
+        for(Wrapper wrapper : items){
+            if(holders.getViewType(wrapper.item, senderId) != VIEW_TYPE_DATE_HEADER){
+                count++;
+            }
+        }
+        return count;
     }
 
     @Override
@@ -602,7 +614,7 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
     /*
     * WRAPPER
     * */
-    private class Wrapper<DATA> {
+    public class Wrapper<DATA> {
         protected DATA item;
         protected boolean isSelected;
 

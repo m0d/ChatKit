@@ -36,7 +36,7 @@ import java.util.List;
 @SuppressWarnings("WeakerAccess")
 public class MessageHolders {
 
-    private static final short VIEW_TYPE_DATE_HEADER = 130;
+    public static final short VIEW_TYPE_DATE_HEADER = 130;
     private static final short VIEW_TYPE_TEXT_MESSAGE = 131;
     private static final short VIEW_TYPE_IMAGE_MESSAGE = 132;
 
