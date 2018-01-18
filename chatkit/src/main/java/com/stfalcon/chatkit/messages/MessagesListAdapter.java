@@ -41,6 +41,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import timber.log.Timber;
+
 import static com.stfalcon.chatkit.messages.MessageHolders.VIEW_TYPE_DATE_HEADER;
 
 /**
@@ -120,6 +122,18 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
             }
         }
         return count;
+    }
+
+    public IMessage getOldestMessage() {
+        IMessage item = null;
+        for(Wrapper wrapper : items){
+            if(holders.getViewType(wrapper.item, senderId) != VIEW_TYPE_DATE_HEADER && wrapper.item instanceof IMessage){
+                item = (IMessage) wrapper.item;
+                Timber.w("oldest text : %s", item.getText());
+                break;
+            }
+        }
+        return item;
     }
 
     @Override
