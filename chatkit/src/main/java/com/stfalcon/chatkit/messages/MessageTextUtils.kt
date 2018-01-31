@@ -3,7 +3,6 @@ package com.stfalcon.chatkit.messages
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.text.style.URLSpan
-import com.github.ajalt.timberkt.w
 import java.util.regex.Pattern
 
 /**
@@ -24,7 +23,6 @@ class MessageTextUtils {
             while (matcher.find()) {
                 var group = matcher.group()
                 group = group.substring(1, group.length - 1)
-                w { group }
                 var url: UrlDescriptor? = null
                 if (group.contains("|")) {
                     val split = group.split("|")
