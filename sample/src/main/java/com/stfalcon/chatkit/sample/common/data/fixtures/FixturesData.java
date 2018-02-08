@@ -54,17 +54,17 @@ abstract class FixturesData {
 
     static final ArrayList<String> messages = new ArrayList<String>() {
         {
-            add("Hello! <https://google.com> and <https://google.com|Google> ha!");
-            add("This is my phone number - +1 (234) 567-89-01 <https://google.com> and <https://google.com|Google>");
-            add("Here is my e-mail - myemail@example.com <https://google.com> and <https://google.com|Google>");
-            add("Hey! Check out this awesome link! www.github.com <https://google.com> and <https://google.com|Google>");
-            add("Hello! No problem. I can today at 2 pm. And after we can go to the office. <https://google.com> and <https://google.com|Google>");
-            add("At first, for some time, I was not able to answer him one word <https://google.com> and <https://google.com|Google>");
-            add("At length one of them called out in a clear, polite, smooth dialect, not unlike in sound to the Italian <https://google.com> and <https://google.com|Google>");
-            add("By the bye, Bob, said Hopkins <https://google.com> and <https://google.com|Google>");
-            add("He made his passenger captain of one, with four of the men; and himself, his mate, and five more, went in the other; and they contrived their business very well, for they came up to the ship about midnight. <https://google.com> and <https://google.com|Google>");
-            add("So saying he unbuckled his baldric with the bugle <https://google.com> and <https://google.com|Google>");
-            add("Just then her head struck against the roof of the hall: in fact she was now more than nine feet high, and she at once took up the little golden key and hurried off to the garden door. <https://google.com> and <https://google.com|Google>");
+            add("Hello! <https://google.com> and <https://google.com|Google> ha! *bold* _italic_ ~strike~ and again <https://google.com|Google> and ... <https://www.onet.pl|Onet>");
+            add("This is my phone number - +1 (234) 567-89-01 <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
+            add("Here is my e-mail - myemail@example.com <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
+            add("Hey! Check out this awesome link! www.github.com <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
+            add("Hello! No problem. I can today at 2 pm. And after we can go to the office. <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
+            add("At first, for some time, I was not able to answer him one word <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
+            add("At length one of them called out in a clear, polite, smooth dialect, not unlike in sound to the Italian <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
+            add("By the bye, Bob, said Hopkins <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
+            add("He made his passenger captain of one, with four of the men; and himself, his mate, and five more, went in the other; and they contrived their business very well, for they came up to the ship about midnight. <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
+            add("So saying he unbuckled his baldric with the bugle <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
+            add("Just then her head struck against the roof of the hall: in fact she was now more than nine feet high, and she at once took up the little golden key and hurried off to the garden door. <https://google.com> and <https://google.com|Google> *bold* _italic_ ~strike~");
         }
     };
 

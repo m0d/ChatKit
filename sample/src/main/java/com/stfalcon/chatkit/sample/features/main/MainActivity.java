@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 
+import com.github.ajalt.timberkt.Timber;
 import com.stfalcon.chatkit.sample.R;
 import com.stfalcon.chatkit.sample.features.demo.custom.holder.CustomHolderDialogsActivity;
 import com.stfalcon.chatkit.sample.features.demo.custom.layout.CustomLayoutDialogsActivity;
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Timber.plant(new timber.log.Timber.DebugTree());
 
         ViewPager pager = (ViewPager) findViewById(R.id.pager);
         pager.setAdapter(new MainActivityPagerAdapter(this, getSupportFragmentManager()));

@@ -557,16 +557,13 @@ public class MessageHolders {
     }
 
     public static void applyTextTransformation(TextView textView, String text, int gravity, MessagesListStyle style){
-        List<MessageTextUtils.UrlDescriptor> textUrls = MessageTextUtils.Companion.getTextUrls(text);
-        if(!textUrls.isEmpty()){
-            @SuppressLint("RtlHardcoded") SpannableString sText = MessageTextUtils.Companion.transform(text, textUrls,
-                    (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
-            );
-            textView.setText(sText);
-            textView.setMovementMethod(LinkMovementMethod.getInstance());
-        }else{
-            textView.setText(text);
-        }
+        List<MessageTextUtils.PatternDescriptor> textUrls = MessageTextUtils.Companion.getTextPatterns(text);
+        @SuppressLint("RtlHardcoded") SpannableString sText = MessageTextUtils.Companion.transform(text, textUrls,
+                (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
+        );
+
+        textView.setText(sText);
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     /**
