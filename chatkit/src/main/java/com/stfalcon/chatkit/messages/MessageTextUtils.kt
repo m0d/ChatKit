@@ -6,6 +6,8 @@ import android.text.style.ForegroundColorSpan
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
+import com.github.ajalt.timberkt.w
+import com.stfalcon.chatkit.utils.NonbreakingSpan
 import java.util.regex.Pattern
 
 /**
@@ -85,8 +87,8 @@ class MessageTextUtils {
             var closestIndex = Int.MAX_VALUE
             val pattern = "*~<>_"
             var thisIndex: Int
-            pattern.forEach { c ->
-                thisIndex = text.indexOf(c, currentIndex)
+            pattern.forEach { tag ->
+                thisIndex = text.indexOf(tag, currentIndex)
                 if (thisIndex != -1 && thisIndex < closestIndex) {
                     closestIndex = thisIndex
                 }
@@ -131,8 +133,9 @@ class MessageTextUtils {
                 thisUrl = urls[i]
                 if (thisUrl.isLink && thisUrl.surrounding != MarkDown.LINK) {
                     var j = 0
+                    var nextUrl : PatternDescriptor
                     while (i + j < urls.size) {
-                        var nextUrl = urls[i + j]
+                        nextUrl = urls[i + j]
                         if (nextUrl.surrounding == MarkDown.LINK) {
                             thisUrl.offset = nextUrl.content.length + 1
                             break
@@ -191,6 +194,23 @@ class MessageTextUtils {
                 }
             }
 
+            return transformCommandLike(spannableString)
+        }
+
+        private fun transformCommandLike(spannableString: SpannableString): SpannableString {
+            val text = spannableString.toString()
+            val pattern = Pattern.compile("(/(.*?)\\s)|(/(.*+))")
+
+            val matcher = pattern.matcher(text)
+            var group: String
+            while (matcher.find()) {
+                group = matcher.group()
+                if(!group.startsWith("//")) { // its url
+                    w { "GROUP $group" }
+                    val indexOf = text.indexOf(group)
+                    spannableString.setSpan(NonbreakingSpan(),indexOf, indexOf + group.length, 0)
+                }
+            }
             return spannableString
         }
     }
