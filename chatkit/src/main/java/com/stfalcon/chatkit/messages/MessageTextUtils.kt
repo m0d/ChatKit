@@ -7,14 +7,13 @@ import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
 import java.util.regex.Pattern
-import com.stfalcon.chatkit.messages.MarkDown
 
 /**
  * @author Grzegorz Pawełczuk <grzegorz.pawelczuk@ftlearning.com>
  * @author Mikołaj Kowal <mikolaj.kowal@nftlearning.com>
  * Nikkei FT Learning Limited
  * @since 04.01.2018
- * //2-12-2018 - Mikołaj Kowal - added support for nested expressions
+ * //13-2-2018 - Mikołaj Kowal - added support for nested expressions
  */
 
 
@@ -85,8 +84,9 @@ class MessageTextUtils {
         private fun findNextMarkDown(currentIndex: Int, text: String): Int {
             var closestIndex = Int.MAX_VALUE
             val pattern = "*~<>_"
+            var thisIndex: Int
             pattern.forEach { c ->
-                var thisIndex = text.indexOf(c, currentIndex)
+                thisIndex = text.indexOf(c, currentIndex)
                 if (thisIndex != -1 && thisIndex < closestIndex) {
                     closestIndex = thisIndex
                 }
@@ -98,10 +98,11 @@ class MessageTextUtils {
         }
 
         private fun removeMarkDowns(markDownText: String): String {
-            var pattern = "*~<>_"
+            val pattern = "*~<>_"
             var toReturn = String(markDownText.toCharArray())
+            var thisSign: String
             for (i in 0 until pattern.length) {
-                var thisSign = pattern[i].toString()
+                thisSign = pattern[i].toString()
                 toReturn = toReturn.replace(thisSign, "")
             }
             return toReturn
@@ -125,15 +126,16 @@ class MessageTextUtils {
         }
 
         private fun calculateOffset(urls: MutableList<PatternDescriptor>): MutableList<PatternDescriptor> {
+            var thisUrl:PatternDescriptor
             for (i in 0 until urls.size) {
-                var thisUrl = urls[i]
+                thisUrl = urls[i]
                 if (thisUrl.isLink && thisUrl.surrounding != MarkDown.LINK) {
                     var j = 0
                     while (i + j < urls.size) {
                         var nextUrl = urls[i + j]
                         if (nextUrl.surrounding == MarkDown.LINK) {
                             thisUrl.offset = nextUrl.content.length + 1
-                            break;
+                            break
                         }
                         j++
                     }
@@ -195,7 +197,7 @@ class MessageTextUtils {
 
     data class PatternSpanDescriptor(val startIndex: Int, val endIndex: Int, val content: String, val label: String? = null, val isLink: Boolean = true, val isBold: Boolean = false, val isItalic: Boolean = false, val isStroke: Boolean = false)
 
-    data class PatternDescriptor(var content: String, val label: String? = null, var isLink: Boolean = true, var isBold: Boolean = false, var isItalic: Boolean = false, var isStroke: Boolean = false, var surrounding: Int = MarkDown.NONE, var beginIndex: Int = 0, var endIndex: Int = 0, var offset: Int = 0) {
+    data class PatternDescriptor(var content: String, val label: String? = null, var isLink: Boolean = true, var isBold: Boolean = false, var isItalic: Boolean = false, var isStroke: Boolean = false, @MarkDown.MarkDowns var surrounding: Int = MarkDown.NONE, var beginIndex: Int = 0, var endIndex: Int = 0, var offset: Int = 0) {
         fun toTag(): String {
             if (content.contains("|")) {
                 content = content.split("|")[1]
