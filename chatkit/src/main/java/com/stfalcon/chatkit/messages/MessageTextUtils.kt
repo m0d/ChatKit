@@ -22,7 +22,7 @@ import java.util.regex.Pattern
 class MessageTextUtils {
 
 
-        companion object {
+    companion object {
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
             val pattern = Pattern.compile("<(.*?)>|\\*(.*?)\\*|_(.*?)_|~(.*?)~")
@@ -128,12 +128,12 @@ class MessageTextUtils {
         }
 
         private fun calculateOffset(urls: MutableList<PatternDescriptor>): MutableList<PatternDescriptor> {
-            var thisUrl:PatternDescriptor
+            var thisUrl: PatternDescriptor
             for (i in 0 until urls.size) {
                 thisUrl = urls[i]
                 if (thisUrl.isLink && thisUrl.surrounding != MarkDown.LINK) {
                     var j = 0
-                    var nextUrl : PatternDescriptor
+                    var nextUrl: PatternDescriptor
                     while (i + j < urls.size) {
                         nextUrl = urls[i + j]
                         if (nextUrl.surrounding == MarkDown.LINK) {
@@ -205,10 +205,10 @@ class MessageTextUtils {
             var group: String
             while (matcher.find()) {
                 group = matcher.group()
-                if(!group.startsWith("//")) { // its url
+                if (!group.startsWith("//")) { // its url
                     w { "GROUP $group" }
                     val indexOf = text.indexOf(group)
-                    spannableString.setSpan(NonbreakingSpan(),indexOf, indexOf + group.length, 0)
+                    spannableString.setSpan(NonbreakingSpan(), indexOf, indexOf + group.length, 0)
                 }
             }
             return spannableString

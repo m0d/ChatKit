@@ -557,10 +557,11 @@ public class MessageHolders {
     }
 
     public static void applyTextTransformation(TextView textView, String text, int gravity, MessagesListStyle style){
-        List<EmojisDetect.EmojiDescriptor> emojisDescriptors = EmojisDetect.Companion.detectEmojis(text);
-        String emojiText = EmojisDetect.Companion.transformText(text,emojisDescriptors);
-        List<MessageTextUtils.PatternDescriptor> textUrls = MessageTextUtils.Companion.getTextPatterns(emojiText);
-        @SuppressLint("RtlHardcoded") SpannableString sText = MessageTextUtils.Companion.transform(emojiText, textUrls,
+        EmojisDetect emojisDetect = new EmojisDetect();
+        List<EmojisDetect.EmojiDescriptor> emojisDescriptors = emojisDetect.detectEmojis(text);
+        text = emojisDetect.transformText(text,emojisDescriptors);
+        List<MessageTextUtils.PatternDescriptor> textUrls = MessageTextUtils.Companion.getTextPatterns(text);
+        @SuppressLint("RtlHardcoded") SpannableString sText = MessageTextUtils.Companion.transform(text, textUrls,
                 (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
         );
 
