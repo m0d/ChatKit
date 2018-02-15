@@ -22,7 +22,7 @@ import java.util.regex.Pattern
 class MessageTextUtils {
 
 
-    companion object {
+        companion object {
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
             val pattern = Pattern.compile("<(.*?)>|\\*(.*?)\\*|_(.*?)_|~(.*?)~")
