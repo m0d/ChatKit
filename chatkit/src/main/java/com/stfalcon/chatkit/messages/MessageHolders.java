@@ -565,15 +565,6 @@ public class MessageHolders {
                 text,
                 (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
         );
-
-
-        List<EmojiTextUtils.EmojiDescriptor> emojisDescriptors = EmojiTextUtils.Companion.detectEmojis(text);
-        text = EmojiTextUtils.Companion.transformText(text,emojisDescriptors);
-
-        List<MessageTextUtils.PatternDescriptor> textUrls = MessageTextUtils.Companion.getTextPatterns(text);
-         SpannableString sText = MessageTextUtils.Companion.transform(text, textUrls,
-                (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
-        );
     }
 
     /**
