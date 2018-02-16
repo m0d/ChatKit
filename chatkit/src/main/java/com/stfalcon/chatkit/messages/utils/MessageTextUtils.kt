@@ -1,12 +1,16 @@
-package com.stfalcon.chatkit.messages
+package com.stfalcon.chatkit.messages.utils
 
 import android.graphics.Typeface
+import android.support.annotation.ColorInt
 import android.text.SpannableString
+import android.text.method.LinkMovementMethod
 import android.text.style.ForegroundColorSpan
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
+import android.widget.TextView
 import com.github.ajalt.timberkt.w
+import com.stfalcon.chatkit.messages.MarkDown
 import com.stfalcon.chatkit.utils.NonbreakingSpan
 import java.util.regex.Pattern
 
@@ -21,8 +25,18 @@ import java.util.regex.Pattern
 
 class MessageTextUtils {
 
-
     companion object {
+
+        fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int){
+            val text  = EmojiTextUtils.transform( rawText )
+            view.text = MessageTextUtils.transform( text, linkColor )
+            view.movementMethod = LinkMovementMethod.getInstance()
+        }
+
+        private fun transform(text: String, @ColorInt linkColor: Int) : SpannableString{
+            return MessageTextUtils.transform(text, getTextPatterns(text), linkColor)
+        }
+
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
             val pattern = Pattern.compile("<(.*?)>|\\*(.*?)\\*|_(.*?)_|~(.*?)~")
@@ -128,12 +142,12 @@ class MessageTextUtils {
         }
 
         private fun calculateOffset(urls: MutableList<PatternDescriptor>): MutableList<PatternDescriptor> {
-            var thisUrl:PatternDescriptor
+            var thisUrl: PatternDescriptor
             for (i in 0 until urls.size) {
                 thisUrl = urls[i]
                 if (thisUrl.isLink && thisUrl.surrounding != MarkDown.LINK) {
                     var j = 0
-                    var nextUrl : PatternDescriptor
+                    var nextUrl: PatternDescriptor
                     while (i + j < urls.size) {
                         nextUrl = urls[i + j]
                         if (nextUrl.surrounding == MarkDown.LINK) {
@@ -205,10 +219,10 @@ class MessageTextUtils {
             var group: String
             while (matcher.find()) {
                 group = matcher.group()
-                if(!group.startsWith("//")) { // its url
+                if (!group.startsWith("//")) { // its url
                     w { "GROUP $group" }
                     val indexOf = text.indexOf(group)
-                    spannableString.setSpan(NonbreakingSpan(),indexOf, indexOf + group.length, 0)
+                    spannableString.setSpan(NonbreakingSpan(), indexOf, indexOf + group.length, 0)
                 }
             }
             return spannableString
