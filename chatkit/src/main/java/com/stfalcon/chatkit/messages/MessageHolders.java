@@ -22,6 +22,8 @@ import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.commons.ViewHolder;
 import com.stfalcon.chatkit.commons.models.IMessage;
 import com.stfalcon.chatkit.commons.models.MessageContentType;
+import com.stfalcon.chatkit.messages.utils.EmojiTextUtils;
+import com.stfalcon.chatkit.messages.utils.MessageTextUtils;
 import com.stfalcon.chatkit.utils.DateFormatter;
 import com.stfalcon.chatkit.utils.RoundedImageView;
 
@@ -556,17 +558,22 @@ public class MessageHolders {
         }
     }
 
+    @SuppressLint("RtlHardcoded")
     public static void applyTextTransformation(TextView textView, String text, int gravity, MessagesListStyle style){
-        EmojisDetect emojisDetect = new EmojisDetect();
-        List<EmojisDetect.EmojiDescriptor> emojisDescriptors = emojisDetect.detectEmojis(text);
-        text = emojisDetect.transformText(text,emojisDescriptors);
-        List<MessageTextUtils.PatternDescriptor> textUrls = MessageTextUtils.Companion.getTextPatterns(text);
-        @SuppressLint("RtlHardcoded") SpannableString sText = MessageTextUtils.Companion.transform(text, textUrls,
+        MessageTextUtils.Companion.applyTextTransformations(
+                textView,
+                text,
                 (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
         );
 
-        textView.setText(sText);
-        textView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        List<EmojiTextUtils.EmojiDescriptor> emojisDescriptors = EmojiTextUtils.Companion.detectEmojis(text);
+        text = EmojiTextUtils.Companion.transformText(text,emojisDescriptors);
+
+        List<MessageTextUtils.PatternDescriptor> textUrls = MessageTextUtils.Companion.getTextPatterns(text);
+         SpannableString sText = MessageTextUtils.Companion.transform(text, textUrls,
+                (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
+        );
     }
 
     /**
