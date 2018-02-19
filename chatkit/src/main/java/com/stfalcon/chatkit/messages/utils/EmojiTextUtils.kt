@@ -9,6 +9,7 @@ import java.util.regex.Pattern
  * @since 14.02.2018
  * 14-02-2018 - Mikołaj Kowal - added support for basic emojis
  * 16-02-2018 - Grzegorz Pawełczuk - optimization
+ * 19-02-2019 - Mikołaj Kowal - added suport for most, if not all emojis(650 emojis)
  */
 
 class EmojiTextUtils {
