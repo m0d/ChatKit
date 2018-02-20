@@ -1,4 +1,4 @@
-package com.stfalcon.chatkit.sample;
+package com.stfalcon.chatkit;
 
 import org.junit.Test;
 
