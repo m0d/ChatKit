@@ -100,7 +100,7 @@ class MessageTextUtilsTest {
     }
 
     @Test
-    fun sanitizeTest() {
+    fun sanitiseTest() {
         val content = "m**********r"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf()
 
@@ -108,7 +108,7 @@ class MessageTextUtilsTest {
     }
 
     @Test
-    fun sanitizeAndBoldTest() {
+    fun sanitiseAndBoldTest() {
         val content = "**h*k* *word*"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
                 MessageTextUtils.PatternDescriptor("word",null,
@@ -118,7 +118,7 @@ class MessageTextUtilsTest {
     }
 
     @Test
-    fun sanitizeTrailingTest() {
+    fun sanitiseTrailingTest() {
         val content = "*dasadasa**"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf()
 
@@ -126,7 +126,7 @@ class MessageTextUtilsTest {
     }
 
     @Test
-    fun sanitizeLeadingTest() {
+    fun sanitiseLeadingTest() {
         val content = "***w"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf()
 
