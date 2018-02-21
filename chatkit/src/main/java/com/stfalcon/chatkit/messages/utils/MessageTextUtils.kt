@@ -39,7 +39,7 @@ class MessageTextUtils {
 
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
-            val pattern = Pattern.compile("<(.*?)>|\\*(.*?)\\*|_(.*?)_|~(.*?)~")
+            val pattern = Pattern.compile("<(.*?)>|(?<!\\S)\\*([^*\\n]{1,})\\*(?!\\S)|_(.*?)_|~(.*?)~")
             val matcher = pattern.matcher(text)
             while (matcher.find()) {
                 var group = matcher.group()
@@ -163,7 +163,7 @@ class MessageTextUtils {
             return urls
         }
 
-        fun transform(text: String, urls: MutableList<PatternDescriptor>, color: Int): SpannableString {
+        private fun transform(text: String, urls: MutableList<PatternDescriptor>, color: Int): SpannableString {
             val checkedUrls = calculateOffset(urls)
             val descriptors: MutableList<PatternSpanDescriptor> = mutableListOf()
             var urlText: String
@@ -229,9 +229,16 @@ class MessageTextUtils {
         }
     }
 
-    data class PatternSpanDescriptor(val startIndex: Int, val endIndex: Int, val content: String, val label: String? = null, val isLink: Boolean = true, val isBold: Boolean = false, val isItalic: Boolean = false, val isStroke: Boolean = false)
+    data class PatternSpanDescriptor(val startIndex: Int, val endIndex: Int, val content: String,
+                                     val label: String? = null, val isLink: Boolean = true,
+                                     val isBold: Boolean = false, val isItalic: Boolean = false,
+                                     val isStroke: Boolean = false)
 
-    data class PatternDescriptor(var content: String, val label: String? = null, var isLink: Boolean = true, var isBold: Boolean = false, var isItalic: Boolean = false, var isStroke: Boolean = false, @MarkDown.MarkDowns var surrounding: Int = MarkDown.NONE, var beginIndex: Int = 0, var endIndex: Int = 0, var offset: Int = 0) {
+    data class PatternDescriptor(var content: String, val label: String? = null,
+                                 var isLink: Boolean = true, var isBold: Boolean = false,
+                                 var isItalic: Boolean = false, var isStroke: Boolean = false,
+                                 @MarkDown.MarkDowns var surrounding: Int = MarkDown.NONE,
+                                 var beginIndex: Int = 0, var endIndex: Int = 0, var offset: Int = 0) {
         fun toTag(): String {
             if (content.contains("|")) {
                 content = content.split("|")[1]
