@@ -1,5 +1,6 @@
 package com.stfalcon.chatkit
 
+import android.util.Log
 import com.stfalcon.chatkit.messages.MarkDown
 import com.stfalcon.chatkit.messages.utils.MessageTextUtils
 import org.junit.Test
@@ -147,6 +148,32 @@ class MessageTextUtilsTest {
     fun nullBoldTest() {
         val content = "c ** t"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf()
+
+        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    }
+
+    @Test
+    fun welcomeBoldTest() {
+        val content = "Hi, *endry04* and *endry05*!"
+        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
+                MessageTextUtils.PatternDescriptor("endry04",null,
+                        false, true, false, false, MarkDown.BOLD),
+                MessageTextUtils.PatternDescriptor("endry05",null,
+                        false, true, false, false, MarkDown.BOLD)
+
+        )
+
+        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    }
+
+    @Test
+    fun specialCharsBoldTest() {
+        val content = "Hi,*endry04* and*endry05*!"
+        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
+                MessageTextUtils.PatternDescriptor("endry04",null,
+                        false, true, false, false, MarkDown.BOLD)
+
+        )
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
     }
