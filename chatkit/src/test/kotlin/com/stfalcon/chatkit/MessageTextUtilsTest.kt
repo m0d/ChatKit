@@ -73,8 +73,6 @@ class MessageTextUtilsTest {
                         MarkDown.BOLD))
 
         val patterns = MessageTextUtils.getTextPatterns(content)
-        System.out.println("a" + expected.toString())
-        System.out.println("b" + patterns.toString())
         assertEquals(expected, patterns)
     }
 
@@ -147,6 +145,32 @@ class MessageTextUtilsTest {
     fun nullBoldTest() {
         val content = "c ** t"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf()
+
+        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    }
+
+    @Test
+    fun welcomeBoldTest() {
+        val content = "Hi, *endry04* and *endry05*!"
+        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
+                MessageTextUtils.PatternDescriptor("endry04",null,
+                        false, true, false, false, MarkDown.BOLD),
+                MessageTextUtils.PatternDescriptor("endry05",null,
+                        false, true, false, false, MarkDown.BOLD)
+
+        )
+
+        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    }
+
+    @Test
+    fun specialCharsBoldTest() {
+        val content = "Hi,*endry04* and*endry05*!"
+        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
+                MessageTextUtils.PatternDescriptor("endry04",null,
+                        false, true, false, false, MarkDown.BOLD)
+
+        )
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
     }

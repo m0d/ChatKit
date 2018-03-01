@@ -39,7 +39,7 @@ class MessageTextUtils {
 
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
-            val pattern = Pattern.compile("<(.*?)>|(?<!\\S)\\*([^*\\n]{1,})\\*(?!\\S)|_(.*?)_|~(.*?)~")
+            val pattern = Pattern.compile("<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
             val matcher = pattern.matcher(text)
             while (matcher.find()) {
                 var group = matcher.group()
