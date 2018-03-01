@@ -1,6 +1,5 @@
 package com.stfalcon.chatkit
 
-import android.util.Log
 import com.stfalcon.chatkit.messages.MarkDown
 import com.stfalcon.chatkit.messages.utils.MessageTextUtils
 import org.junit.Test
@@ -74,8 +73,6 @@ class MessageTextUtilsTest {
                         MarkDown.BOLD))
 
         val patterns = MessageTextUtils.getTextPatterns(content)
-        System.out.println("a" + expected.toString())
-        System.out.println("b" + patterns.toString())
         assertEquals(expected, patterns)
     }
 
