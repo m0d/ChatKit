@@ -11,6 +11,7 @@ import kotlin.test.assertNotEquals
  * @email maciej.madetko@ftlearning.com
  * Nikkei FT Learning Limited
  * @since 20/02/2018.
+ * 02-03-2018 - Grzegorz Pawełczuk - Quote test
  */
 class PatternDescriptorTest {
 

@@ -15,7 +15,8 @@ import java.util.regex.Pattern
  * @author Mikołaj Kowal <mikolaj.kowal@nftlearning.com>
  * Nikkei FT Learning Limited
  * @since 04.01.2018
- * //13-2-2018 - Mikołaj Kowal - added support for nested expressions
+ * 13-2-2018 - Mikołaj Kowal - added support for nested expressions
+ * 02-03-2018 - Grzegorz Pawełczuk - Quote support
  */
 
 
