@@ -4,12 +4,8 @@ import android.graphics.Typeface
 import android.support.annotation.ColorInt
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
-import android.text.style.ForegroundColorSpan
-import android.text.style.StrikethroughSpan
-import android.text.style.StyleSpan
-import android.text.style.URLSpan
+import android.text.style.*
 import android.widget.TextView
-import com.github.ajalt.timberkt.w
 import com.stfalcon.chatkit.messages.MarkDown
 import com.stfalcon.chatkit.utils.NonbreakingSpan
 import java.util.regex.Pattern
@@ -19,13 +15,16 @@ import java.util.regex.Pattern
  * @author Mikołaj Kowal <mikolaj.kowal@nftlearning.com>
  * Nikkei FT Learning Limited
  * @since 04.01.2018
- * //13-2-2018 - Mikołaj Kowal - added support for nested expressions
+ * 13-2-2018 - Mikołaj Kowal - added support for nested expressions
+ * 02-03-2018 - Grzegorz Pawełczuk - Quote support
  */
 
 
 class MessageTextUtils {
 
     companion object {
+
+        const val QUOTE_INSET = 32
 
         fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int){
             val text  = EmojiTextUtils.transform( rawText )
@@ -39,7 +38,7 @@ class MessageTextUtils {
 
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
-            val pattern = Pattern.compile("<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
+            val pattern = Pattern.compile("(&gt;)(.*)|<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
             val matcher = pattern.matcher(text)
             while (matcher.find()) {
                 var group = matcher.group()
@@ -47,8 +46,13 @@ class MessageTextUtils {
                 var isBold = false
                 var isItalic = false
                 var isStroke = false
+                var isQuote = false
                 var surrounding = MarkDown.NONE
                 when {
+                    group.startsWith("&gt;") -> {
+                        isQuote = true
+                        surrounding = MarkDown.QUOTE
+                    }
                     group.startsWith("<") -> {
                         isLink = true
                         surrounding = MarkDown.LINK
@@ -66,7 +70,10 @@ class MessageTextUtils {
                         surrounding = MarkDown.STROKE
                     }
                 }
-                group = group.substring(1, group.length - 1)
+                group = group.substring(
+                        if(isQuote) 4 else 1,
+                        group.length - (if(!isQuote) 1 else 0)
+                )
                 if (findNextMarkDown(0, group) != -1) {
                     val reqList = getTextPatterns(group)
                     if (reqList.size > 0) {
@@ -76,6 +83,7 @@ class MessageTextUtils {
                                 isItalic -> unit.isItalic = true
                                 isStroke -> unit.isStroke = true
                                 isLink -> unit.isLink = true
+                                isQuote -> unit.isQuote = true
                             }
                             list.add(unit)
                         }
@@ -85,10 +93,10 @@ class MessageTextUtils {
                 if (group.contains("|") && isLink) {
                     val split = group.split("|")
                     if (split.isNotEmpty()) {
-                        url = PatternDescriptor(removeMarkDowns(split[0]), removeMarkDowns(split[1]), true, isBold, isItalic, isStroke, surrounding)
+                        url = PatternDescriptor(removeMarkDowns(split[0]), removeMarkDowns(split[1]), true, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
                     }
                 } else {
-                    url = PatternDescriptor(removeMarkDowns(group), null, isLink, isBold, isItalic, isStroke, surrounding)
+                    url = PatternDescriptor(removeMarkDowns(group), null, isLink, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
                 }
                 url?.run {
                     list.add(this)
@@ -138,6 +146,9 @@ class MessageTextUtils {
             if (url.isStroke) {
                 i += 1
             }
+            if (url.isQuote) {
+                i += 4
+            }
             return i
         }
 
@@ -174,7 +185,7 @@ class MessageTextUtils {
                     val parts = textToCheck.split(urlText)
                     if (parts.isNotEmpty()) {
                         textToCheck = parts[0] + url.getLabelToDisplay() + parts.drop(1).joinToString(separator = urlText)
-                        descriptors.add(PatternSpanDescriptor(
+                        val element = PatternSpanDescriptor(
                                 parts[0].length - howManyLevelsIn(url) - url.offset,
                                 parts[0].length + url.getLabelToDisplay().length - howManyLevelsIn(url) - url.offset,
                                 url.content,
@@ -182,9 +193,10 @@ class MessageTextUtils {
                                 url.isLink,
                                 url.isBold,
                                 url.isItalic,
-                                url.isStroke
+                                url.isStroke,
+                                url.isQuote
                         )
-                        )
+                        descriptors.add(element)
                     }
                 }
             }
@@ -206,6 +218,9 @@ class MessageTextUtils {
                 if (content.isStroke) {
                     spannableString.setSpan(StrikethroughSpan(), content.startIndex, content.endIndex, 0)
                 }
+                if (content.isQuote) {
+                    spannableString.setSpan(LeadingMarginSpan.Standard(QUOTE_INSET, QUOTE_INSET), content.startIndex, content.endIndex, 0)
+                }
             }
 
             return transformCommandLike(spannableString)
@@ -220,7 +235,6 @@ class MessageTextUtils {
             while (matcher.find()) {
                 group = matcher.group()
                 if (!group.startsWith("//")) { // its url
-                    w { "GROUP $group" }
                     val indexOf = text.indexOf(group)
                     spannableString.setSpan(NonbreakingSpan(), indexOf, indexOf + group.length, 0)
                 }
@@ -232,13 +246,14 @@ class MessageTextUtils {
     data class PatternSpanDescriptor(val startIndex: Int, val endIndex: Int, val content: String,
                                      val label: String? = null, val isLink: Boolean = true,
                                      val isBold: Boolean = false, val isItalic: Boolean = false,
-                                     val isStroke: Boolean = false)
+                                     val isStroke: Boolean = false,
+                                     val isQuote: Boolean = false)
 
     data class PatternDescriptor(var content: String, val label: String? = null,
                                  var isLink: Boolean = true, var isBold: Boolean = false,
                                  var isItalic: Boolean = false, var isStroke: Boolean = false,
-                                 @MarkDown.MarkDowns var surrounding: Int = MarkDown.NONE,
-                                 var beginIndex: Int = 0, var endIndex: Int = 0, var offset: Int = 0) {
+                                 var isQuote: Boolean = false,
+                                 var beginIndex: Int = 0, var endIndex: Int = 0, var offset: Int = 0, @MarkDown.MarkDowns var surrounding: Long = MarkDown.NONE) {
         fun toTag(): String {
             if (content.contains("|")) {
                 content = content.split("|")[1]
@@ -254,6 +269,7 @@ class MessageTextUtils {
                 MarkDown.BOLD -> "*$content*"
                 MarkDown.ITALIC -> "_${content}_"
                 MarkDown.STROKE -> "~$content~"
+                MarkDown.QUOTE -> "&gt;$content"
                 else -> content
             }
         }
