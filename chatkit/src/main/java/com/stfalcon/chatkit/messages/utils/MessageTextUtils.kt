@@ -122,8 +122,6 @@ class MessageTextUtils {
         }
 
         private fun removeMarkDowns(markDownText: String): String {
-            System.out.println("input: $markDownText")
-
             val pattern = Pattern.compile("<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
             val matcher = pattern.matcher(markDownText)
             var text: String
@@ -131,14 +129,12 @@ class MessageTextUtils {
             while (matcher.find()) {
                 text = matcher.group()
                 toReturn = text.substring(1, text.length - 1)
-                System.out.println("process: $text")
             }
 
             if(toReturn.startsWith("&gt;")){
                 toReturn = toReturn.substring("&gt;".length, toReturn.length)
             }
 
-            System.out.println("output: $toReturn")
             return toReturn
         }
 
