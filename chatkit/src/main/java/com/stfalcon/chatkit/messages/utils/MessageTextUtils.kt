@@ -70,10 +70,7 @@ class MessageTextUtils {
                         surrounding = MarkDown.STROKE
                     }
                 }
-                group = group.substring(
-                        if(isQuote) 4 else 1,
-                        group.length - (if(!isQuote) 1 else 0)
-                )
+                group = removeMarkdownSurroundings(group, isQuote)
                 if (findNextMarkDown(0, group) != -1) {
                     val reqList = getTextPatterns(group)
                     if (reqList.size > 0) {
@@ -93,10 +90,10 @@ class MessageTextUtils {
                 if (group.contains("|") && isLink) {
                     val split = group.split("|")
                     if (split.isNotEmpty()) {
-                        url = PatternDescriptor(removeMarkDowns(split[0]), removeMarkDowns(split[1]), true, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
+                        url = PatternDescriptor(split[0], split[1], true, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
                     }
                 } else {
-                    url = PatternDescriptor(removeMarkDowns(group), null, isLink, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
+                    url = PatternDescriptor(group, null, isLink, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
                 }
                 url?.run {
                     list.add(this)
@@ -121,16 +118,7 @@ class MessageTextUtils {
             return closestIndex
         }
 
-        private fun removeMarkDowns(markDownText: String): String {
-            val pattern = "*~<>_"
-            var toReturn = String(markDownText.toCharArray())
-            var thisSign: String
-            for (i in 0 until pattern.length) {
-                thisSign = pattern[i].toString()
-                toReturn = toReturn.replace(thisSign, "")
-            }
-            return toReturn
-        }
+        private fun removeMarkdownSurroundings(group: String, isQuote: Boolean = false) = group.substring(if(isQuote) 4 else 1, group.length - if(!isQuote) 1 else 0)
 
         private fun howManyLevelsIn(url: PatternDescriptor): Int {
             var i = -1
