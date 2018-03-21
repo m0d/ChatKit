@@ -139,9 +139,9 @@ class PatternDescriptorTest {
 
     @Test
     fun linkNftlLabelTest() {
-        val content = "somescheme://launcher/collaborate/CHANNELXXX/scenario_name/USERXXX/USERZZZ"
+        val content = "somescheme://method/type/XXX/some_name/YYY/ZZZ"
         val label = "Text 1: Test Name"
-        val expected = "<somescheme://launcher/collaborate/CHANNELXXX/scenario_name/USERXXX/USERZZZ|Text 1: Test Name>"
+        val expected = "<somescheme://method/type/XXX/some_name/YYY/ZZZ|Text 1: Test Name>"
 
         val pattern = MessageTextUtils.PatternDescriptor(content, label = label, surrounding = MarkDown.LINK)
         assertEquals(expected,pattern.toTag())

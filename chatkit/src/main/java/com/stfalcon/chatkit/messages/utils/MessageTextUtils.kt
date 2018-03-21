@@ -70,7 +70,10 @@ class MessageTextUtils {
                         surrounding = MarkDown.STROKE
                     }
                 }
-                group = removeMarkdownSurroundings(group, isQuote)
+                group = group.substring(
+                        if(isQuote) 4 else 1,
+                        group.length - (if(!isQuote) 1 else 0)
+                )
                 if (findNextMarkDown(0, group) != -1) {
                     val reqList = getTextPatterns(group)
                     if (reqList.size > 0) {
@@ -90,10 +93,10 @@ class MessageTextUtils {
                 if (group.contains("|") && isLink) {
                     val split = group.split("|")
                     if (split.isNotEmpty()) {
-                        url = PatternDescriptor(split[0], split[1], true, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
+                        url = PatternDescriptor(removeMarkDowns(split[0]), removeMarkDowns(split[1]), true, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
                     }
                 } else {
-                    url = PatternDescriptor(group, null, isLink, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
+                    url = PatternDescriptor(removeMarkDowns(group), null, isLink, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
                 }
                 url?.run {
                     list.add(this)
@@ -118,7 +121,26 @@ class MessageTextUtils {
             return closestIndex
         }
 
-        private fun removeMarkdownSurroundings(group: String, isQuote: Boolean = false) = group.substring(if(isQuote) 4 else 1, group.length - if(!isQuote) 1 else 0)
+        private fun removeMarkDowns(markDownText: String): String {
+            System.out.println("input: $markDownText")
+
+            val pattern = Pattern.compile("<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
+            val matcher = pattern.matcher(markDownText)
+            var text: String
+            var toReturn = markDownText
+            while (matcher.find()) {
+                text = matcher.group()
+                toReturn = text.substring(1, text.length - 1)
+                System.out.println("process: $text")
+            }
+
+            if(toReturn.startsWith("&gt;")){
+                toReturn = toReturn.substring("&gt;".length, toReturn.length)
+            }
+
+            System.out.println("output: $toReturn")
+            return toReturn
+        }
 
         private fun howManyLevelsIn(url: PatternDescriptor): Int {
             var i = -1
@@ -267,4 +289,3 @@ class MessageTextUtils {
         }
     }
 }
-
