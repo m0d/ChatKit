@@ -205,9 +205,9 @@ class MessageTextUtilsTest {
 
     @Test
     fun deepLinkTest() {
-        val content = "<nftl://onet.pl/path1/path2|title: label with whitespaces>"
+        val content = "<somescheme://onet.pl/path1/path2|title: label with whitespaces>"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("nftl://onet.pl/path1/path2",
+                MessageTextUtils.PatternDescriptor("somescheme://onet.pl/path1/path2",
                         "title: label with whitespaces", true, false, false, false,
                         surrounding = MarkDown.LINK))
 
@@ -216,9 +216,9 @@ class MessageTextUtilsTest {
 
     @Test
     fun deepLinkUnderscoreTest() {
-        val content = "<nftl://onet.pl/path1/path2_underscore/path3|title: label with whitespaces>"
+        val content = "<somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces>"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("nftl://onet.pl/path1/path2_underscore/path3",
+                MessageTextUtils.PatternDescriptor("somescheme://onet.pl/path1/path2_underscore/path3",
                         "title: label with whitespaces", true, false, false, false,
                         surrounding = MarkDown.LINK))
 
