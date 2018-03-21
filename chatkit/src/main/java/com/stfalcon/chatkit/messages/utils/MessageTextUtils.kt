@@ -6,6 +6,7 @@ import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.text.style.*
 import android.widget.TextView
+import com.stfalcon.chatkit.commons.events.CustomUrlSpan
 import com.stfalcon.chatkit.messages.MarkDown
 import com.stfalcon.chatkit.utils.NonbreakingSpan
 import java.util.regex.Pattern
@@ -194,8 +195,15 @@ class MessageTextUtils {
             descriptors.forEach { content ->
 
                 if (content.isLink) {
-                    spannableString.setSpan(URLSpan(content.content), content.startIndex, content.endIndex, 0)
+                    if(content.content.startsWith("https://appear.in")) {
+                        spannableString.setSpan(CustomUrlSpan(content.content), content.startIndex, content.endIndex, 0)
+                    } else {
+                        spannableString.setSpan(URLSpan(content.content), content.startIndex, content.endIndex, 0)
+                    }
                     spannableString.setSpan(ForegroundColorSpan(color), content.startIndex, content.endIndex, 0)
+                    spannableString.setSpan(ForegroundColorSpan(color), content.startIndex, content.endIndex, 0)
+
+                    spannableString.getSpans(0, textToCheck.length, URLSpan::class.java)
                 }
                 if (content.isBold) {
                     spannableString.setSpan(StyleSpan(Typeface.BOLD), content.startIndex, content.endIndex, 0)

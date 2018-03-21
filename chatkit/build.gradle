@@ -41,6 +41,9 @@ ext {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
+    /* EventBus */
+    implementation "org.greenrobot:eventbus:$eventbus_version"
+
     implementation "com.android.support:appcompat-v7:$supportVersion"
     implementation "com.android.support:design:$supportVersion"
     implementation "com.google.android:flexbox:$flexboxVersion"
