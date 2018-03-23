@@ -25,12 +25,13 @@ class MessageTextUtils {
 
     companion object {
 
-        const val QUOTE_INSET = 32
+        private const val QUOTE_INSET = 32
 
         fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int){
-            val text  = EmojiTextUtils.transform( rawText )
-            view.text = MessageTextUtils.transform( text, linkColor )
+            //val text  = EmojiTextUtils.transform( rawText )
+            view.text = EmojiTextUtils.transform( rawText ) //MessageTextUtils.transform( text, linkColor )
             view.movementMethod = LinkMovementMethod.getInstance()
+
         }
 
         private fun transform(text: String, @ColorInt linkColor: Int) : SpannableString{
