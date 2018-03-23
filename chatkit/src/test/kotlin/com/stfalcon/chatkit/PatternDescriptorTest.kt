@@ -116,4 +116,35 @@ class PatternDescriptorTest {
         val pattern = MessageTextUtils.PatternDescriptor(content, null, surrounding = MarkDown.QUOTE)
         assertNotEquals(expected,pattern.toTag())
     }
+
+    @Test
+    fun linkSchemaLabelTest() {
+        val content = "somescheme://lorem.ipsum.dolor.com/lorem/ipsum"
+        val label = "Lorem ipsum"
+        val expected = "<somescheme://lorem.ipsum.dolor.com/lorem/ipsum|Lorem ipsum>"
+
+        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, surrounding = MarkDown.LINK)
+        assertEquals(expected,pattern.toTag())
+    }
+
+    @Test
+    fun linkComplexLabelTest() {
+        val content = "somescheme://lorem.ipsum.dolor.com/lorem/ipsum"
+        val label = "Lorem ipsum: lorem & ipsum"
+        val expected = "<somescheme://lorem.ipsum.dolor.com/lorem/ipsum|Lorem ipsum: lorem & ipsum>"
+
+        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, surrounding = MarkDown.LINK)
+        assertEquals(expected,pattern.toTag())
+    }
+
+    @Test
+    fun linkNftlLabelTest() {
+        val content = "somescheme://method/type/XXX/some_name/YYY/ZZZ"
+        val label = "Text 1: Test Name"
+        val expected = "<somescheme://method/type/XXX/some_name/YYY/ZZZ|Text 1: Test Name>"
+
+        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, surrounding = MarkDown.LINK)
+        assertEquals(expected,pattern.toTag())
+    }
+
 }

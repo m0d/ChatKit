@@ -6,8 +6,12 @@ import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.text.style.*
 import android.widget.TextView
+import com.github.ajalt.timberkt.w
+import com.stfalcon.chatkit.commons.events.CustomUrlSpan
 import com.stfalcon.chatkit.messages.MarkDown
 import com.stfalcon.chatkit.utils.NonbreakingSpan
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
 import java.util.regex.Pattern
 
 /**
@@ -24,15 +28,22 @@ class MessageTextUtils {
 
     companion object {
 
-        const val QUOTE_INSET = 32
+        private const val QUOTE_INSET = 32
 
-        fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int){
-            val text  = EmojiTextUtils.transform( rawText )
-            view.text = MessageTextUtils.transform( text, linkColor )
-            view.movementMethod = LinkMovementMethod.getInstance()
+        fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int) {
+            Single.fromCallable{
+                val text = EmojiTextUtils.transform(rawText)
+                MessageTextUtils.transform(text, linkColor)
+            }
+            .subscribeOn(io.reactivex.schedulers.Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ text ->
+                view.text = text
+                view.movementMethod = LinkMovementMethod.getInstance()
+            },{e -> w{"${e.message}"}})
         }
 
-        private fun transform(text: String, @ColorInt linkColor: Int) : SpannableString{
+        private fun transform(text: String, @ColorInt linkColor: Int): SpannableString {
             return MessageTextUtils.transform(text, getTextPatterns(text), linkColor)
         }
 
@@ -71,8 +82,8 @@ class MessageTextUtils {
                     }
                 }
                 group = group.substring(
-                        if(isQuote) 4 else 1,
-                        group.length - (if(!isQuote) 1 else 0)
+                        if (isQuote) 4 else 1,
+                        group.length - (if (!isQuote) 1 else 0)
                 )
                 if (findNextMarkDown(0, group) != -1) {
                     val reqList = getTextPatterns(group)
@@ -122,13 +133,19 @@ class MessageTextUtils {
         }
 
         private fun removeMarkDowns(markDownText: String): String {
-            val pattern = "*~<>_"
-            var toReturn = String(markDownText.toCharArray())
-            var thisSign: String
-            for (i in 0 until pattern.length) {
-                thisSign = pattern[i].toString()
-                toReturn = toReturn.replace(thisSign, "")
+            val pattern = Pattern.compile("<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
+            val matcher = pattern.matcher(markDownText)
+            var text: String
+            var toReturn = markDownText
+            while (matcher.find()) {
+                text = matcher.group()
+                toReturn = text.substring(1, text.length - 1)
             }
+
+            if (toReturn.startsWith("&gt;")) {
+                toReturn = toReturn.substring("&gt;".length, toReturn.length)
+            }
+
             return toReturn
         }
 
@@ -206,8 +223,15 @@ class MessageTextUtils {
             descriptors.forEach { content ->
 
                 if (content.isLink) {
-                    spannableString.setSpan(URLSpan(content.content), content.startIndex, content.endIndex, 0)
+                    if (content.content.startsWith("https://appear.in")) {
+                        spannableString.setSpan(CustomUrlSpan(content.content), content.startIndex, content.endIndex, 0)
+                    } else {
+                        spannableString.setSpan(URLSpan(content.content), content.startIndex, content.endIndex, 0)
+                    }
                     spannableString.setSpan(ForegroundColorSpan(color), content.startIndex, content.endIndex, 0)
+                    spannableString.setSpan(ForegroundColorSpan(color), content.startIndex, content.endIndex, 0)
+
+                    spannableString.getSpans(0, textToCheck.length, URLSpan::class.java)
                 }
                 if (content.isBold) {
                     spannableString.setSpan(StyleSpan(Typeface.BOLD), content.startIndex, content.endIndex, 0)
@@ -279,4 +303,3 @@ class MessageTextUtils {
         }
     }
 }
-
