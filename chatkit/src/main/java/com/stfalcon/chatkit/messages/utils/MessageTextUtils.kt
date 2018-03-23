@@ -10,7 +10,7 @@ import com.github.ajalt.timberkt.w
 import com.stfalcon.chatkit.commons.events.CustomUrlSpan
 import com.stfalcon.chatkit.messages.MarkDown
 import com.stfalcon.chatkit.utils.NonbreakingSpan
-import io.reactivex.Flowable
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import java.util.regex.Pattern
 
@@ -31,14 +31,16 @@ class MessageTextUtils {
         private const val QUOTE_INSET = 32
 
         fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int) {
-            Flowable.fromCallable {
+            Single.fromCallable{
                 val text = EmojiTextUtils.transform(rawText)
-                view.text = MessageTextUtils.transform(text, linkColor)
-                view.movementMethod = LinkMovementMethod.getInstance()
+                MessageTextUtils.transform(text, linkColor)
             }
             .subscribeOn(io.reactivex.schedulers.Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({},{e -> w{"${e.message}"}})
+            .subscribe({ text ->
+                view.text = text
+                view.movementMethod = LinkMovementMethod.getInstance()
+            },{e -> w{"${e.message}"}})
         }
 
         private fun transform(text: String, @ColorInt linkColor: Int): SpannableString {
