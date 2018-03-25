@@ -31,7 +31,7 @@ class MessageTextUtils {
         private const val QUOTE_INSET = 32
         private val mEntityMap : Map<String,String> = mapOf(
                 "&gt;" to ">",
-                "&gl;" to "<",
+                "&lt;" to "<",
                 "&amp;" to "&"
             )
 
