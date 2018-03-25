@@ -29,10 +29,23 @@ class MessageTextUtils {
     companion object {
 
         private const val QUOTE_INSET = 32
+        private val mEntityMap : Map<String,String> = mapOf(
+                "&gt;" to ">",
+                "&gl;" to "<",
+                "&amp;" to "&"
+            )
+
+        fun fromEntities(text : String): String {
+            var data = text
+            mEntityMap.forEach{
+                data = data.replace(it.key, it.value)
+            }
+            return data
+        }
 
         fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int) {
             Single.fromCallable{
-                val text = EmojiTextUtils.transform(rawText)
+                val text = EmojiTextUtils.transform(fromEntities(rawText))
                 MessageTextUtils.transform(text, linkColor)
             }
             .subscribeOn(io.reactivex.schedulers.Schedulers.io())
@@ -43,13 +56,14 @@ class MessageTextUtils {
             },{e -> w{"${e.message}"}})
         }
 
-        private fun transform(text: String, @ColorInt linkColor: Int): SpannableString {
-            return MessageTextUtils.transform(text, getTextPatterns(text), linkColor)
+        fun transform(text: String, @ColorInt linkColor: Int): SpannableString {
+            val data = fromEntities(text)
+            return MessageTextUtils.transform(data, getTextPatterns(data), linkColor)
         }
 
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
-            val pattern = Pattern.compile("(&gt;)(.*)|<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
+            val pattern = Pattern.compile("(>)(.*)|<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
             val matcher = pattern.matcher(text)
             while (matcher.find()) {
                 var group = matcher.group()
@@ -60,7 +74,7 @@ class MessageTextUtils {
                 var isQuote = false
                 var surrounding = MarkDown.NONE
                 when {
-                    group.startsWith("&gt;") -> {
+                    group.startsWith(">") -> {
                         isQuote = true
                         surrounding = MarkDown.QUOTE
                     }
@@ -82,7 +96,7 @@ class MessageTextUtils {
                     }
                 }
                 group = group.substring(
-                        if (isQuote) 4 else 1,
+                        1,
                         group.length - (if (!isQuote) 1 else 0)
                 )
                 if (findNextMarkDown(0, group) != -1) {
@@ -132,6 +146,16 @@ class MessageTextUtils {
             return closestIndex
         }
 
+        private fun isMarkDown(text: String): Boolean{
+            return when{
+                text.startsWith("*") && text.endsWith("*") -> true
+                text.startsWith("_") && text.endsWith("_") -> true
+                text.startsWith("~") && text.endsWith("~") -> true
+                text.startsWith("<") && text.endsWith(">") -> true
+                else -> false
+            }
+        }
+
         private fun removeMarkDowns(markDownText: String): String {
             val pattern = Pattern.compile("<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
             val matcher = pattern.matcher(markDownText)
@@ -140,10 +164,13 @@ class MessageTextUtils {
             while (matcher.find()) {
                 text = matcher.group()
                 toReturn = text.substring(1, text.length - 1)
+                while(isMarkDown(toReturn)){
+                    toReturn = removeMarkDowns(toReturn)
+                }
             }
 
-            if (toReturn.startsWith("&gt;")) {
-                toReturn = toReturn.substring("&gt;".length, toReturn.length)
+            if (toReturn.startsWith(">")) {
+                toReturn = toReturn.substring(">".length, toReturn.length)
             }
 
             return toReturn
@@ -164,7 +191,7 @@ class MessageTextUtils {
                 i += 1
             }
             if (url.isQuote) {
-                i += 4
+                i += 1
             }
             return i
         }
@@ -293,7 +320,7 @@ class MessageTextUtils {
                 MarkDown.BOLD -> "*$content*"
                 MarkDown.ITALIC -> "_${content}_"
                 MarkDown.STROKE -> "~$content~"
-                MarkDown.QUOTE -> "&gt;$content"
+                MarkDown.QUOTE -> ">$content"
                 else -> content
             }
         }

@@ -252,4 +252,41 @@ class MessageTextUtilsTest {
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
     }
+
+    @Test
+    fun quoteFirstLineTest() {
+        val content = "&gt;quote"
+
+        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
+        )
+
+        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    }
+
+    @Test
+    fun quoteWithBoldTest() {
+        val content = "&gt;*quote*"
+
+        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
+        )
+
+        assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
+    }
+
+    @Test
+    fun quoteWithBoldItalicTest() {
+        val content = "&gt;*_quote_*"
+
+        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
+        )
+
+        assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
+    }
 }
+
