@@ -298,5 +298,16 @@ class MessageTextUtilsTest {
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
     }
+
+    @Test
+    fun deepTest() {
+        val content = MessageTextUtils.fromEntities("<somescheme://onet.pl/test_blim_blam/path2|title: label with whitespaces>")
+        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
+                MessageTextUtils.PatternDescriptor("somescheme://onet.pl/test_blim_blam/path2",
+                        "title: label with whitespaces", true, false, false, false,
+                        surrounding = MarkDown.LINK))
+
+        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    }
 }
 
