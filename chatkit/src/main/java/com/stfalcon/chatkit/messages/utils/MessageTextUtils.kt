@@ -95,10 +95,12 @@ class MessageTextUtils {
                         surrounding = MarkDown.STROKE
                     }
                 }
+
                 group = group.substring(
                         1,
                         group.length - (if (!isQuote) 1 else 0)
                 )
+
                 if (findNextMarkDown(0, group) != -1) {
                     val reqList = getTextPatterns(group)
                     if (reqList.size > 0) {
@@ -161,16 +163,17 @@ class MessageTextUtils {
             val matcher = pattern.matcher(markDownText)
             var text: String
             var toReturn = markDownText
-            while (matcher.find()) {
-                text = matcher.group()
-                toReturn = text.substring(1, text.length - 1)
-                while(isMarkDown(toReturn)){
-                    toReturn = removeMarkDowns(toReturn)
-                }
-            }
 
             if (toReturn.startsWith(">")) {
                 toReturn = toReturn.substring(">".length, toReturn.length)
+            }
+
+            while (matcher.find()) {
+                text = matcher.group()
+                toReturn = toReturn.replace(text,text.substring(1, text.length - 1))
+                while(isMarkDown(toReturn)){
+                    toReturn = removeMarkDowns(toReturn)
+                }
             }
 
             return toReturn

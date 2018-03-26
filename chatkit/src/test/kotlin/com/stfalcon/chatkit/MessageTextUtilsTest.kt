@@ -284,5 +284,19 @@ class MessageTextUtilsTest {
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
     }
+
+
+    @Test
+    fun quoteMultiTest() {
+        val content = "&gt;_kursywa jak zywa_ *bold z lupy*"
+
+        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
+                MessageTextUtils.PatternDescriptor(content="kursywa jak zywa", label=null, isLink=false, isBold=false, isItalic=true, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
+                MessageTextUtils.PatternDescriptor(content="bold z lupy", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
+                MessageTextUtils.PatternDescriptor(content="kursywa jak zywa bold z lupy", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
+        )
+
+        assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
+    }
 }
 
