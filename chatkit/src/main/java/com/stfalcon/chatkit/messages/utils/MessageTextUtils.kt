@@ -56,14 +56,14 @@ class MessageTextUtils {
             },{e -> w{"${e.message}"}})
         }
 
-        fun transform(text: String, @ColorInt linkColor: Int): SpannableString {
+        private fun transform(text: String, @ColorInt linkColor: Int): SpannableString {
             val data = fromEntities(text)
             return MessageTextUtils.transform(data, getTextPatterns(data), linkColor)
         }
 
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
-            val pattern = Pattern.compile("(>)(.*)|<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
+            val pattern = Pattern.compile("(>)(.+)|<([a-zA-Z]{4}:(.*?))>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
             val matcher = pattern.matcher(text)
             while (matcher.find()) {
                 var group = matcher.group()
@@ -157,7 +157,7 @@ class MessageTextUtils {
         }
 
         private fun removeMarkDowns(markDownText: String): String {
-            val pattern = Pattern.compile("<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
+            val pattern = Pattern.compile("<([a-zA-Z]{4}:(.*?))>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
             val matcher = pattern.matcher(markDownText)
             var text: String
             var toReturn = markDownText
