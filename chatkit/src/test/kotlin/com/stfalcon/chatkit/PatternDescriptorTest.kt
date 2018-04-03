@@ -20,7 +20,7 @@ class PatternDescriptorTest {
         val content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
         val expected = "*Lorem ipsum dolor sit amet, consectetur adipiscing elit*"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, null, surrounding = MarkDown.BOLD)
+        val pattern = MessageTextUtils.PatternDescriptor(content, null, isBullet = false, isNumbered = false, surrounding = MarkDown.BOLD)
         assertEquals(expected,pattern.toTag())
     }
 
@@ -29,7 +29,7 @@ class PatternDescriptorTest {
         val content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
         val expected = "_Lorem ipsum dolor sit amet, consectetur adipiscing elit_"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, null, surrounding = MarkDown.ITALIC)
+        val pattern = MessageTextUtils.PatternDescriptor(content, null, isBullet = false, isNumbered = false, surrounding = MarkDown.ITALIC)
         assertEquals(expected,pattern.toTag())
     }
 
@@ -38,7 +38,7 @@ class PatternDescriptorTest {
         val content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
         val expected = "~Lorem ipsum dolor sit amet, consectetur adipiscing elit~"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, null, surrounding = MarkDown.STROKE)
+        val pattern = MessageTextUtils.PatternDescriptor(content, null, isBullet = false, isNumbered = false, surrounding = MarkDown.STROKE)
         assertEquals(expected,pattern.toTag())
     }
 
@@ -47,7 +47,7 @@ class PatternDescriptorTest {
         val content = "http://lorem.ipsum.dolor.com"
         val expected = "<http://lorem.ipsum.dolor.com>"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, null, surrounding = MarkDown.LINK)
+        val pattern = MessageTextUtils.PatternDescriptor(content, null, isBullet = false, isNumbered = false, surrounding = MarkDown.LINK)
         assertEquals(expected,pattern.toTag())
     }
 
@@ -57,7 +57,7 @@ class PatternDescriptorTest {
         val label = "Lorem ipsum"
         val expected = "<http://lorem.ipsum.dolor.com|Lorem ipsum>"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, isQuote = false, surrounding = MarkDown.LINK)
+        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, isQuote = false, isBullet = false, isNumbered = false, surrounding = MarkDown.LINK)
         assertEquals(expected,pattern.toTag())
     }
 
@@ -67,7 +67,7 @@ class PatternDescriptorTest {
         val label = "Lorem ipsum"
         val expected = "Lorem ipsum"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, isQuote = false, surrounding = MarkDown.LINK)
+        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, isQuote = false, isBullet = false, isNumbered = false, surrounding = MarkDown.LINK)
         assertEquals(expected,pattern.getLabelToDisplay())
     }
 
@@ -77,7 +77,7 @@ class PatternDescriptorTest {
         val label = null
         val expected = "http://lorem.ipsum.dolor.com"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, isQuote = false, surrounding = MarkDown.LINK)
+        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, isQuote = false, isBullet = false, isNumbered = false, surrounding = MarkDown.LINK)
         assertEquals(expected,pattern.getLabelToDisplay())
     }
 
@@ -86,7 +86,7 @@ class PatternDescriptorTest {
         val content = "http://lorem.ipsum.dolor.com"
         val expected = "http://lorem.ipsum.dolor.com"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, null, surrounding = 12)
+        val pattern = MessageTextUtils.PatternDescriptor(content, null, isBullet = false, isNumbered = false, surrounding = 12)
         assertEquals(expected,pattern.toTag())
     }
 
@@ -95,7 +95,7 @@ class PatternDescriptorTest {
         val content = "Lorem ipsum dolor sit amet"
         val expected = "*Lorem ipsum dolor sit amet*"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, null, surrounding = 5)
+        val pattern = MessageTextUtils.PatternDescriptor(content, null, isBullet = false, isNumbered = false, surrounding = 5)
         assertNotEquals(expected,pattern.toTag())
     }
 
@@ -104,7 +104,7 @@ class PatternDescriptorTest {
         val content = "Lorem ipsum dolor sit amet"
         val expected = "~Lorem ipsum dolor sit amet~"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, null, surrounding = MarkDown.ITALIC)
+        val pattern = MessageTextUtils.PatternDescriptor(content, null, isBullet = false, isNumbered = false, surrounding = MarkDown.ITALIC)
         assertNotEquals(expected,pattern.toTag())
     }
 
@@ -113,7 +113,7 @@ class PatternDescriptorTest {
         val content = "Lorem ipsum dolor sit amet"
         val expected = "\\&gt;Lorem ipsum dolor sit amet"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, null, surrounding = MarkDown.QUOTE)
+        val pattern = MessageTextUtils.PatternDescriptor(content, null, isBullet = false, isNumbered = false, surrounding = MarkDown.QUOTE)
         assertNotEquals(expected,pattern.toTag())
     }
 
@@ -123,7 +123,7 @@ class PatternDescriptorTest {
         val label = "Lorem ipsum"
         val expected = "<somescheme://lorem.ipsum.dolor.com/lorem/ipsum|Lorem ipsum>"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, surrounding = MarkDown.LINK)
+        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, isBullet = false, isNumbered = false, surrounding = MarkDown.LINK)
         assertEquals(expected,pattern.toTag())
     }
 
@@ -133,7 +133,7 @@ class PatternDescriptorTest {
         val label = "Lorem ipsum: lorem & ipsum"
         val expected = "<somescheme://lorem.ipsum.dolor.com/lorem/ipsum|Lorem ipsum: lorem & ipsum>"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, surrounding = MarkDown.LINK)
+        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, isBullet = false, isNumbered = false, surrounding = MarkDown.LINK)
         assertEquals(expected,pattern.toTag())
     }
 
@@ -143,7 +143,7 @@ class PatternDescriptorTest {
         val label = "Text 1: Test Name"
         val expected = "<somescheme://method/type/XXX/some_name/YYY/ZZZ|Text 1: Test Name>"
 
-        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, surrounding = MarkDown.LINK)
+        val pattern = MessageTextUtils.PatternDescriptor(content, label = label, isBullet = false, isNumbered = false, surrounding = MarkDown.LINK)
         assertEquals(expected,pattern.toTag())
     }
 

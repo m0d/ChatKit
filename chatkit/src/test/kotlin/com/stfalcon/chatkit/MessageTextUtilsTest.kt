@@ -21,6 +21,8 @@ class MessageTextUtilsTest {
                 MessageTextUtils.PatternDescriptor("dajshdj",
                         null, false, false, false, true,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.STROKE))
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
@@ -34,6 +36,8 @@ class MessageTextUtilsTest {
                 MessageTextUtils.PatternDescriptor(contentWithoutMarkdown,
                         null, false, true, false, false,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.BOLD))
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
@@ -46,6 +50,8 @@ class MessageTextUtilsTest {
                 MessageTextUtils.PatternDescriptor("dasdasdasd",
                         null, false, false, true, false,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.ITALIC))
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
@@ -58,6 +64,8 @@ class MessageTextUtilsTest {
                 MessageTextUtils.PatternDescriptor("http://onet.pl",
                         null, true, false, false, false,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.LINK))
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
@@ -70,14 +78,20 @@ class MessageTextUtilsTest {
                 MessageTextUtils.PatternDescriptor("http://onet.pl",
                         null, true, true, false, false,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.LINK),
                 MessageTextUtils.PatternDescriptor("http://onet.pl",
                         null, false, true, false, false,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.BOLD),
                 MessageTextUtils.PatternDescriptor("bold",
                         null, false, true, false, false,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.BOLD))
 
         val patterns = MessageTextUtils.getTextPatterns(content)
@@ -91,14 +105,20 @@ class MessageTextUtilsTest {
                 MessageTextUtils.PatternDescriptor("dajshdj",
                         null, false, false, false, true,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.STROKE),
                 MessageTextUtils.PatternDescriptor("bdsajjh",
                         null, false, true, false, false,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.BOLD),
                 MessageTextUtils.PatternDescriptor("dasdasdasd",
                         null, false, false, true, false,
                         false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.ITALIC))
 
         val patterns = MessageTextUtils.getTextPatterns(content)
@@ -118,7 +138,7 @@ class MessageTextUtilsTest {
         val content = "**h*k* *word*"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
                 MessageTextUtils.PatternDescriptor("word", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD))
+                        false, true, false, false, false, isBullet = false, isNumbered = false, surrounding = MarkDown.BOLD))
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
     }
@@ -144,7 +164,7 @@ class MessageTextUtilsTest {
         val content = "c * * t"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
                 MessageTextUtils.PatternDescriptor(" ", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD))
+                        false, true, false, false, false, isBullet = false, isNumbered = false, surrounding = MarkDown.BOLD))
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
     }
@@ -162,9 +182,9 @@ class MessageTextUtilsTest {
         val content = "Hi, *endry04* and *endry05*!"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
                 MessageTextUtils.PatternDescriptor("endry04", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD),
+                        false, true, false, false, false, isBullet = false, isNumbered = false, surrounding = MarkDown.BOLD),
                 MessageTextUtils.PatternDescriptor("endry05", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD)
+                        false, true, false, false, false, isBullet = false, isNumbered = false, surrounding = MarkDown.BOLD)
 
         )
 
@@ -176,7 +196,7 @@ class MessageTextUtilsTest {
         val content = "Hi,*endry04* and*endry05*!"
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
                 MessageTextUtils.PatternDescriptor("endry04", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD)
+                        false, true, false, false, false, isBullet = false, isNumbered = false, surrounding = MarkDown.BOLD)
 
         )
 
@@ -189,11 +209,15 @@ class MessageTextUtilsTest {
         val content = MessageTextUtils.fromEntities("Mark said before:\n&gt;I love cars\n and you know what? I am *OK* with that!")
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
                 MessageTextUtils.PatternDescriptor(content = "I love cars", label = null,
-                        isLink = false, isBold = false, isItalic = false, isStroke = false, isQuote = true, beginIndex = 0, endIndex = 0, offset = 0,
-                        surrounding = MarkDown.QUOTE),
+                        isLink = false, isBold = false, isItalic = false, isStroke = false, isQuote = true, isBullet = false, isNumbered = false, offset = 0,
+                        surrounding = MarkDown.QUOTE,
+                        beginIndex = 0,
+                        endIndex = 0),
                 MessageTextUtils.PatternDescriptor(content = "OK", label = null,
-                        isLink = false, isBold = true, isItalic = false, isStroke = false, isQuote = false, beginIndex = 0, endIndex = 0, offset = 0,
-                        surrounding = MarkDown.BOLD)
+                        isLink = false, isBold = true, isItalic = false, isStroke = false, isQuote = false, isBullet = false, isNumbered = false, offset = 0,
+                        surrounding = MarkDown.BOLD,
+                        beginIndex = 0,
+                        endIndex = 0)
         )
         val actual = MessageTextUtils.getTextPatterns(content)
         assertEquals(expected, actual)
@@ -205,6 +229,8 @@ class MessageTextUtilsTest {
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
                 MessageTextUtils.PatternDescriptor("somescheme://onet.pl/path1/path2",
                         "title: label with whitespaces", true, false, false, false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.LINK))
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
@@ -215,8 +241,8 @@ class MessageTextUtilsTest {
         val content = MessageTextUtils.fromEntities("lead *<somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces>*")
 
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3", label="title: label with whitespaces", isLink=true, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.LINK),
-                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD)
+                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3", label="title: label with whitespaces", isLink=true, isBold=true, isItalic=false, isStroke=false, isQuote=false, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.LINK, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.BOLD, beginIndex=0, endIndex=0)
         )
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
@@ -227,12 +253,12 @@ class MessageTextUtilsTest {
         val content = MessageTextUtils.fromEntities("dear xxx,\n• some text and write *_some fraze_*.\n• or *_I like it!_*, some text again... yyy is OK.\n Do *<somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces>*")
 
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="some fraze", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
-                MessageTextUtils.PatternDescriptor(content="some fraze", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="I like it!", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
-                MessageTextUtils.PatternDescriptor(content="I like it!", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3", label="title: label with whitespaces", isLink=true, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.LINK),
-                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD)
+                MessageTextUtils.PatternDescriptor(content="some fraze", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=false, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.ITALIC, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="some fraze", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.BOLD, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="I like it!", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=false, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.ITALIC, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="I like it!", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.BOLD, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3", label="title: label with whitespaces", isLink=true, isBold=true, isItalic=false, isStroke=false, isQuote=false, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.LINK, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.BOLD, beginIndex=0, endIndex=0)
         )
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
@@ -243,7 +269,7 @@ class MessageTextUtilsTest {
         val content = MessageTextUtils.fromEntities("lead\n&gt;quote")
 
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.QUOTE, beginIndex=0, endIndex=0)
         )
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
@@ -254,7 +280,7 @@ class MessageTextUtilsTest {
         val content = MessageTextUtils.fromEntities("&gt;quote")
 
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.QUOTE, beginIndex=0, endIndex=0)
         )
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))
@@ -265,8 +291,8 @@ class MessageTextUtilsTest {
         val content = "&gt;*quote*"
 
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.BOLD, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.QUOTE, beginIndex=0, endIndex=0)
         )
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
@@ -277,9 +303,9 @@ class MessageTextUtilsTest {
         val content = "&gt;*_quote_*"
 
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.ITALIC, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.BOLD, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.QUOTE, beginIndex=0, endIndex=0)
         )
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
@@ -291,9 +317,9 @@ class MessageTextUtilsTest {
         val content = "&gt;_kursywa jak zywa_ *bold z lupy*"
 
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="kursywa jak zywa", label=null, isLink=false, isBold=false, isItalic=true, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
-                MessageTextUtils.PatternDescriptor(content="bold z lupy", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="kursywa jak zywa bold z lupy", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
+                MessageTextUtils.PatternDescriptor(content="kursywa jak zywa", label=null, isLink=false, isBold=false, isItalic=true, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.ITALIC, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="bold z lupy", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.BOLD, beginIndex=0, endIndex=0),
+                MessageTextUtils.PatternDescriptor(content="kursywa jak zywa bold z lupy", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, isBullet = false, isNumbered = false, offset=0, surrounding=MarkDown.QUOTE, beginIndex=0, endIndex=0)
         )
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
@@ -305,6 +331,8 @@ class MessageTextUtilsTest {
         val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
                 MessageTextUtils.PatternDescriptor("somescheme://onet.pl/test_blim_blam/path2",
                         "title: label with whitespaces", true, false, false, false,
+                        isBullet = false,
+                        isNumbered = false,
                         surrounding = MarkDown.LINK))
 
         assertEquals(expected, MessageTextUtils.getTextPatterns(content))

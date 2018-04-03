@@ -1,7 +1,8 @@
-package com.stfalcon.chatkit.commons.events
+package com.stfalcon.chatkit.commons.spans
 
 import android.text.style.URLSpan
 import android.view.View
+import com.stfalcon.chatkit.commons.events.OpenAppearIn
 import org.greenrobot.eventbus.EventBus
 
 /**

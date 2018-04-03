@@ -3,16 +3,19 @@ package com.stfalcon.chatkit.messages.utils
 import android.graphics.Typeface
 import android.support.annotation.ColorInt
 import android.text.SpannableString
+import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.*
 import android.widget.TextView
 import com.github.ajalt.timberkt.w
-import com.stfalcon.chatkit.commons.events.CustomUrlSpan
+import com.stfalcon.chatkit.commons.spans.BulletSpanWithRadius
+import com.stfalcon.chatkit.commons.spans.CustomUrlSpan
 import com.stfalcon.chatkit.messages.MarkDown
 import com.stfalcon.chatkit.utils.NonbreakingSpan
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import java.util.regex.Pattern
+
 
 /**
  * @author Grzegorz Pawełczuk <grzegorz.pawelczuk@ftlearning.com>
@@ -28,11 +31,12 @@ class MessageTextUtils {
 
     companion object {
 
-        private const val QUOTE_INSET = 32
+        private const val INSET_WIDTH = 32
         private val mEntityMap : Map<String,String> = mapOf(
                 "&gt;" to ">",
                 "&lt;" to "<",
-                "&amp;" to "&"
+                "&amp;" to "&",
+                "\u2029" to "\n"
             )
 
         fun fromEntities(text : String): String {
@@ -63,18 +67,38 @@ class MessageTextUtils {
 
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
-            val pattern = Pattern.compile("(>)(.+)|<([a-zA-Z]{2,10}:(.*?))>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|(?<!(([\\p{Alnum}])|_))_([^_\\n]+)_(?!(([\\p{Alnum}])|_))|(?<!(([\\p{Alnum}])|~))~([^~\\n]+)~(?!(([\\p{Alnum}])|~))")
+            val pattern = Pattern.compile("(>)(.+)|(-)(.+)|(\\d+)\\..*|<([a-zA-Z]{2,10}:(.*?))>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|(?<!(([\\p{Alnum}])|_))_([^_\\n]+)_(?!(([\\p{Alnum}])|_))|(?<!(([\\p{Alnum}])|~))~([^~\\n]+)~(?!(([\\p{Alnum}])|~))")
             val matcher = pattern.matcher(text)
+
+            val numberedRegexPattern = "^(\\d+)\\..*"
+            val numberedPattern = Pattern.compile(numberedRegexPattern)
+
 
             while (matcher.find()) {
                 var group = matcher.group()
+                val numberedMatcher = numberedPattern.matcher(group)
                 var isLink = false
                 var isBold = false
                 var isItalic = false
                 var isStroke = false
                 var isQuote = false
+                var isBullet = false
+                var isNumbered = false
                 var surrounding = MarkDown.NONE
+
                 when {
+                    group.startsWith(">") -> {
+                        isQuote = true
+                        surrounding = MarkDown.QUOTE
+                    }
+                    group.startsWith("-") -> {
+                        isBullet = true
+                        surrounding = MarkDown.BULLET
+                    }
+                    numberedMatcher.find() -> {
+                        isNumbered = true
+                        surrounding = MarkDown.NUMBERED
+                    }
                     group.startsWith(">") -> {
                         isQuote = true
                         surrounding = MarkDown.QUOTE
@@ -98,8 +122,8 @@ class MessageTextUtils {
                 }
 
                 group = group.substring(
-                        1,
-                        group.length - (if (!isQuote) 1 else 0)
+                        if(!isNumbered) 1 else 0,
+                        group.length - if (!isQuote && !isBullet && !isNumbered) 1 else 0
                 )
 
                 if (findNextMarkDown(0, group) != -1) {
@@ -112,6 +136,8 @@ class MessageTextUtils {
                                 isStroke -> unit.isStroke = true
                                 isLink -> unit.isLink = true
                                 isQuote -> unit.isQuote = true
+                                isBullet -> unit.isBullet = true
+                                isNumbered -> unit.isNumbered = true
                             }
                             list.add(unit)
                         }
@@ -121,10 +147,15 @@ class MessageTextUtils {
                 if (group.contains("|") && isLink) {
                     val split = group.split("|")
                     if (split.isNotEmpty()) {
-                        url = PatternDescriptor(removeMarkDowns(split[0]), removeMarkDowns(split[1]), true, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
+                        url = PatternDescriptor(removeMarkDowns(split[0]), removeMarkDowns(split[1]), true, isBold, isItalic, isStroke, isQuote, isBullet, isNumbered, surrounding = surrounding)
                     }
                 } else {
-                    url = PatternDescriptor(removeMarkDowns(group), null, isLink, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
+                    var label :String? = null
+                    val content = removeMarkDowns(group)
+                    if(isNumbered){
+                        label = content.split(".")[0]
+                    }
+                    url = PatternDescriptor(content, label, isLink, isBold, isItalic, isStroke, isQuote, isBullet, isNumbered, surrounding = surrounding)
                 }
                 url?.run {
                     list.add(this)
@@ -169,6 +200,10 @@ class MessageTextUtils {
                 toReturn = toReturn.substring(">".length, toReturn.length)
             }
 
+            if (toReturn.startsWith("-")) {
+                toReturn = toReturn.substring("-".length, toReturn.length)
+            }
+
             while (matcher.find()) {
                 text = matcher.group()
                 toReturn = toReturn.replace(text,text.substring(1, text.length - 1))
@@ -195,6 +230,9 @@ class MessageTextUtils {
                 i += 1
             }
             if (url.isQuote) {
+                i += 1
+            }
+            if (url.isBullet) {
                 i += 1
             }
             return i
@@ -242,7 +280,9 @@ class MessageTextUtils {
                                 url.isBold,
                                 url.isItalic,
                                 url.isStroke,
-                                url.isQuote
+                                url.isQuote,
+                                url.isBullet,
+                                url.isNumbered
                         )
                         descriptors.add(element)
                     }
@@ -252,7 +292,6 @@ class MessageTextUtils {
             val spannableString = SpannableString(textToCheck)
 
             descriptors.forEach { content ->
-
                 if (content.isLink) {
                     if (content.content.startsWith("https://appear.in")) {
                         spannableString.setSpan(CustomUrlSpan(content.content), content.startIndex, content.endIndex, 0)
@@ -274,7 +313,10 @@ class MessageTextUtils {
                     spannableString.setSpan(StrikethroughSpan(), content.startIndex, content.endIndex, 0)
                 }
                 if (content.isQuote) {
-                    spannableString.setSpan(LeadingMarginSpan.Standard(QUOTE_INSET, QUOTE_INSET), content.startIndex, content.endIndex, 0)
+                    spannableString.setSpan(LeadingMarginSpan.Standard(INSET_WIDTH, INSET_WIDTH), content.startIndex, content.endIndex, 0)
+                }
+                if (content.isBullet) {
+                    spannableString.setSpan(BulletSpanWithRadius(INSET_WIDTH / 6, INSET_WIDTH), content.startIndex, content.endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
 
@@ -302,13 +344,16 @@ class MessageTextUtils {
                                      val label: String? = null, val isLink: Boolean = true,
                                      val isBold: Boolean = false, val isItalic: Boolean = false,
                                      val isStroke: Boolean = false,
-                                     val isQuote: Boolean = false)
+                                     val isQuote: Boolean = false,
+                                     val isBullet: Boolean = false,
+                                     val isNumbered: Boolean = false)
 
     data class PatternDescriptor(var content: String, val label: String? = null,
                                  var isLink: Boolean = true, var isBold: Boolean = false,
                                  var isItalic: Boolean = false, var isStroke: Boolean = false,
                                  var isQuote: Boolean = false,
-                                 var beginIndex: Int = 0, var endIndex: Int = 0, var offset: Int = 0, @MarkDown.MarkDowns var surrounding: Long = MarkDown.NONE) {
+                                 var isBullet: Boolean = false,
+                                 var isNumbered: Boolean = false, var offset: Int = 0, @MarkDown.MarkDowns var surrounding: Long = MarkDown.NONE, var beginIndex: Int = 0, var endIndex: Int = 0) {
         fun toTag(): String {
             if (content.contains("|")) {
                 content = content.split("|")[1]
@@ -319,12 +364,14 @@ class MessageTextUtils {
                     label?.run {
                         swapData += "|$label"
                     }
-                    swapData + ">"
+                    "$swapData>"
                 }
                 MarkDown.BOLD -> "*$content*"
                 MarkDown.ITALIC -> "_${content}_"
                 MarkDown.STROKE -> "~$content~"
                 MarkDown.QUOTE -> ">$content"
+                MarkDown.BULLET -> "-$content"
+                MarkDown.NUMBERED -> "$label $content"
                 else -> content
             }
         }

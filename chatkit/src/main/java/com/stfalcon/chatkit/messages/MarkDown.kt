@@ -9,6 +9,7 @@ import android.support.annotation.IntDef
  * 14-02-2018 - Mikołaj Kowal - IntDef class with text types
  * 16-02-2018 - Grzegorz Pawełczuk - Deprecation fix
  * 01-03-2018 - Grzegorz Pawełczuk - QUOTE++
+ * 29-03-2018 - Grzegorz Pawełczuk - BULLET,NUMBERED ++
  */
 
 object MarkDown {
@@ -19,8 +20,10 @@ object MarkDown {
     const val LINK = 3L
     const val BOLD = 4L
     const val QUOTE = 5L
+    const val BULLET = 6L
+    const val NUMBERED = 7L
 
     @Retention(AnnotationRetention.SOURCE)
-    @IntDef(NONE, BOLD, ITALIC, STROKE, LINK, QUOTE)
+    @IntDef(NONE, BOLD, ITALIC, STROKE, LINK, QUOTE, BULLET, NUMBERED)
     internal annotation class MarkDowns
 }
