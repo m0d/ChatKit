@@ -1,70 +1,203 @@
 package com.stfalcon.chatkit.messages.utils
 
-import android.graphics.Typeface
 import android.support.annotation.ColorInt
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
-import android.text.style.*
 import android.widget.TextView
 import com.github.ajalt.timberkt.w
-import com.stfalcon.chatkit.commons.spans.BulletSpanWithRadius
-import com.stfalcon.chatkit.commons.spans.CustomUrlSpan
-import com.stfalcon.chatkit.messages.MarkDown
-import com.stfalcon.chatkit.utils.NonbreakingSpan
+import com.stfalcon.chatkit.messages.markdown.*
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import java.util.regex.Pattern
 
-
 /**
  * @author Grzegorz Pawełczuk <grzegorz.pawelczuk@ftlearning.com>
- * @author Mikołaj Kowal <mikolaj.kowal@nftlearning.com>
  * Nikkei FT Learning Limited
  * @since 04.01.2018
- * 13-2-2018 - Mikołaj Kowal - added support for nested expressions
- * 02-03-2018 - Grzegorz Pawełczuk - Quote support
  */
-
 
 class MessageTextUtils {
 
     companion object {
+        private val LINE_DELIMITER by lazy { System.lineSeparator() }
+        private val SUPPORTED_MARKDOWNS: List<MarkDown>   by lazy { listOf(Bold, Italic, Strike, Link, Quote, Bullet, Number) }
+        private val SINGLE_LINE_MARKDOWNS: List<MarkDown> by lazy { SUPPORTED_MARKDOWNS.filter { it.isFullLine() } }
+        private val SUBSEQUENT_MARKDOWNS: List<MarkDown>  by lazy { SUPPORTED_MARKDOWNS.filter { !it.isFullLine() } }
 
         private const val INSET_WIDTH = 32
-        private val mEntityMap : Map<String,String> = mapOf(
+
+        private val mEntityMap: Map<String, String> = mapOf(
                 "&gt;" to ">",
                 "&lt;" to "<",
                 "&amp;" to "&",
                 "\u2029" to "\n"
-            )
+        )
 
-        fun fromEntities(text : String): String {
+        private fun fromEntities(text: String): String {
+            val x: MutableList<MarkDown> = mutableListOf(Bold, Quote)
             var data = text
-            mEntityMap.forEach{
+            mEntityMap.forEach {
                 data = data.replace(it.key, it.value)
             }
             return data
         }
 
         fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int) {
-            Single.fromCallable{
+            Single.fromCallable {
                 val text = EmojiTextUtils.transform(fromEntities(rawText))
                 MessageTextUtils.transform(text, linkColor)
             }
-            .subscribeOn(io.reactivex.schedulers.Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ text ->
-                view.text = text
-                view.movementMethod = LinkMovementMethod.getInstance()
-            },{e -> w{"${e.message}"}})
+                    .subscribeOn(io.reactivex.schedulers.Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({ text ->
+                        view.text = text
+                        view.movementMethod = LinkMovementMethod.getInstance()
+                    }, { e -> w { "${e.message}" } })
         }
 
-        private fun transform(text: String, @ColorInt linkColor: Int): SpannableString {
+        fun transform(text: String, @ColorInt linkColor: Int): CharSequence {
             val data = fromEntities(text)
-            return MessageTextUtils.transform(data, getTextPatterns(data), linkColor)
+            separator()
+            log(data, "input")
+            separator()
+            return toSpannableText(fromEntities(text), linkColor)
         }
 
+        private fun separator() = log("----------------------------------------------------------")
+        private fun paragraph() = log("-------------")
+
+        private fun log(text: String?, suffix: String? = null) {
+            var logData = ""
+            suffix?.run {
+                logData += "$suffix: "
+            }
+            logData += text
+            System.out.println(logData)
+        }
+
+        private fun toSpannableText(text: String, @ColorInt linkColor: Int): CharSequence {
+            val textLines = text.split(LINE_DELIMITER)
+            val output: Array<CharSequence?> = arrayOfNulls(textLines.size)
+
+            log(textLines.toString(), "lines")
+            separator()
+
+            textLines.forEachIndexed { index, line ->
+                separator()
+                log(line, "process index $index")
+                output[index] = getLineSpan(line)
+            }
+
+            return ""//TextUtils.concat(*output)
+        }
+
+        private fun getLineSpan(singleLine: String): SpannableString {
+            val spans: MutableList<MarkDownPattern> = mutableListOf()
+            val sequentSpans: MutableList<MarkDownPattern> = mutableListOf()
+            val sequentSpansOrder: MutableList<MarkDownPatternIndexer> = mutableListOf()
+            val lineOutput: String = singleLine.stripMarkdown(SUPPORTED_MARKDOWNS)
+            var output: String = singleLine
+
+            SINGLE_LINE_MARKDOWNS.forEach {
+                val matches = it.matches(singleLine)
+                if (matches) {
+                    output = it.getLabel(output)
+                    spans.add(
+                            MarkDownPattern(
+                                    singleLine,
+                                    0,
+                                    lineOutput.length - 1,
+                                    output,
+                                    0,
+                                    output.length - 1,
+                                    it
+                            )
+                    )
+                    return@forEach // there is only one single line markdown
+                }
+            }
+
+            SUBSEQUENT_MARKDOWNS.forEach {
+                var matches = it.find(output)
+
+                while (matches != null) {
+                    log("$it MATCHES ${matches.value} ${matches.range}")
+                    sequentSpansOrder.add(
+                            MarkDownPatternIndexer(matches.range.first, it)
+                    )
+                    matches = matches.next()
+                }
+            }
+
+            val orderedMarkdowns: MutableList<MarkDownPatternIndexer> = sequentSpansOrder.sortedWith(compareBy { it.startIndex }).toMutableList()
+            log("$orderedMarkdowns")
+
+            while(orderedMarkdowns.size > 0){
+                val pattern = orderedMarkdowns.removeAt(0)
+                val find = pattern.markDown.find(output)
+                find?.run{
+                    paragraph()
+                    val newValue = pattern.markDown.getLabel(this.value)
+                    log(this.value + " -> "+newValue, "replace in output")
+                    output = output.replaceFirst(this.value, newValue)
+                    val strippedText = newValue.stripMarkdown(SUPPORTED_MARKDOWNS)
+                    sequentSpans.add(
+                            MarkDownPattern(
+                                    value,
+                                    range.first,
+                                    range.last,
+                                    strippedText,
+                                    range.first,
+                                    range.first + strippedText.length,
+                                    pattern.markDown
+                            )
+                    )
+                }
+            }
+
+            log("", "all spans")
+            sequentSpans.forEach{  pattern ->
+                with(pattern) {
+                    log("$afterText $afterStartIndex..$afterEndIndex - $markDown")
+                }
+            }
+            separator()
+            log(output,"output")
+
+            return SpannableString(lineOutput)
+        }
+
+        private fun String.stripMarkdown(markDowns: List<MarkDown>): String {
+            separator()
+            var value = this
+            var group: String
+            markDowns.forEach {
+                val matcher = Pattern.compile(it.getRegex()).matcher(value)
+                while (matcher.find()) {
+                    group = matcher.group()
+                    value = value.replace(group, it.getLabel(group))
+                    log(value, "after value")
+                    paragraph()
+                }
+            }
+            return value
+        }
+
+        data class MarkDownPatternIndexer(val startIndex: Int, val markDown: MarkDown)
+
+        data class MarkDownPattern(
+                val beforeText: String,
+                val beforeStartIndex: Int,
+                val beforeEndIndex: Int,
+                val afterText: String,
+                val afterStartIndex: Int,
+                val afterEndIndex: Int,
+                val markDown: MarkDown
+        )
+    }
+
+/*
         fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
             val list: MutableList<PatternDescriptor> = mutableListOf()
             val pattern = Pattern.compile("(>)(.+)|(-)(.+)|(\\d+)\\..*|<([a-zA-Z]{2,10}:(.*?))>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|(?<!(([\\p{Alnum}])|_))_([^_\\n]+)_(?!(([\\p{Alnum}])|_))|(?<!(([\\p{Alnum}])|~))~([^~\\n]+)~(?!(([\\p{Alnum}])|~))")
@@ -84,47 +217,52 @@ class MessageTextUtils {
                 var isQuote = false
                 var isBullet = false
                 var isNumbered = false
-                var surrounding = MarkDown.NONE
+                var surrounding = MarkDownType.NONE
 
                 when {
                     group.startsWith(">") -> {
                         isQuote = true
-                        surrounding = MarkDown.QUOTE
+                        surrounding = MarkDownType.QUOTE
                     }
                     group.startsWith("-") -> {
                         isBullet = true
-                        surrounding = MarkDown.BULLET
+                        surrounding = MarkDownType.BULLET
                     }
                     numberedMatcher.find() -> {
+                        w{"isNumbered"}
                         isNumbered = true
-                        surrounding = MarkDown.NUMBERED
+                        surrounding = MarkDownType.NUMBERED
                     }
                     group.startsWith(">") -> {
                         isQuote = true
-                        surrounding = MarkDown.QUOTE
+                        surrounding = MarkDownType.QUOTE
                     }
                     group.startsWith("<") -> {
                         isLink = true
-                        surrounding = MarkDown.LINK
+                        surrounding = MarkDownType.LINK
                     }
                     group.startsWith("*") -> {
                         isBold = true
-                        surrounding = MarkDown.BOLD
+                        surrounding = MarkDownType.BOLD
                     }
                     group.startsWith("_") -> {
                         isItalic = true
-                        surrounding = MarkDown.ITALIC
+                        surrounding = MarkDownType.ITALIC
                     }
                     group.startsWith("~") -> {
                         isStroke = true
-                        surrounding = MarkDown.STROKE
+                        surrounding = MarkDownType.STROKE
                     }
                 }
 
+                val numberLabel = if(isNumbered) getNumber(group) else ""
+
                 group = group.substring(
-                        if(!isNumbered) 1 else 0,
+                        if(!isNumbered) 1 else numberLabel.length+1,
                         group.length - if (!isQuote && !isBullet && !isNumbered) 1 else 0
                 )
+
+                w{"group $group"}
 
                 if (findNextMarkDown(0, group) != -1) {
                     val reqList = getTextPatterns(group)
@@ -150,18 +288,22 @@ class MessageTextUtils {
                         url = PatternDescriptor(removeMarkDowns(split[0]), removeMarkDowns(split[1]), true, isBold, isItalic, isStroke, isQuote, isBullet, isNumbered, surrounding = surrounding)
                     }
                 } else {
-                    var label :String? = null
+                    w{"----------"}
                     val content = removeMarkDowns(group)
-                    if(isNumbered){
-                        label = content.split(".")[0]
-                    }
-                    url = PatternDescriptor(content, label, isLink, isBold, isItalic, isStroke, isQuote, isBullet, isNumbered, surrounding = surrounding)
+                    w{"content $content"}
+                    url = PatternDescriptor(content, if(isNumbered) numberLabel else null, isLink, isBold, isItalic, isStroke, isQuote, isBullet, isNumbered, surrounding = surrounding)
                 }
                 url?.run {
+                    w{this.toString()}
                     list.add(this)
                 }
             }
             return list
+        }
+
+        private fun getNumber(content: String): String {
+            val split = content.split(".")
+            return if(split.isNotEmpty()) split[0] else ""
         }
 
         private fun findNextMarkDown(currentIndex: Int, text: String): Int {
@@ -235,6 +377,9 @@ class MessageTextUtils {
             if (url.isBullet) {
                 i += 1
             }
+            if (url.isNumbered) {
+                i += 2
+            }
             return i
         }
 
@@ -242,12 +387,12 @@ class MessageTextUtils {
             var thisUrl: PatternDescriptor
             for (i in 0 until urls.size) {
                 thisUrl = urls[i]
-                if (thisUrl.isLink && thisUrl.surrounding != MarkDown.LINK) {
+                if (thisUrl.isLink && thisUrl.surrounding != MarkDownType.LINK) {
                     var j = 0
                     var nextUrl: PatternDescriptor
                     while (i + j < urls.size) {
                         nextUrl = urls[i + j]
-                        if (nextUrl.surrounding == MarkDown.LINK) {
+                        if (nextUrl.surrounding == MarkDownType.LINK) {
                             thisUrl.offset = nextUrl.content.length + 1
                             break
                         }
@@ -270,10 +415,25 @@ class MessageTextUtils {
                 if (textToCheck.indexOf(urlText) != -1) {
                     val parts = textToCheck.split(urlText)
                     if (parts.isNotEmpty()) {
+                        d{"$url"}
+                        d{"x: $textToCheck"}
                         textToCheck = parts[0] + url.getLabelToDisplay() + parts.drop(1).joinToString(separator = urlText)
+                        d{"y: $textToCheck"}
+                        w{"parts ${parts[0]}"}
+                        var howManyLevelsIn = howManyLevelsIn(url)
+                        with(url) {
+                            if(isNumbered  && !isBold && !isItalic && !isStroke && !isQuote && !isBullet){
+                                howManyLevelsIn -= 1
+                            }
+                        }
+                        w{"start ${parts[0].length} - $howManyLevelsIn - ${url.offset}"}
+                        w{"end ${parts[0].length} + ${url.getLabelToDisplay().length} - $howManyLevelsIn - ${url.offset}"}
+
+                        val startIndex = parts[0].length - howManyLevelsIn - url.offset
+
                         val element = PatternSpanDescriptor(
-                                parts[0].length - howManyLevelsIn(url) - url.offset,
-                                parts[0].length + url.getLabelToDisplay().length - howManyLevelsIn(url) - url.offset,
+                                startIndex,
+                                parts[0].length + url.getLabelToDisplay().length - howManyLevelsIn - url.offset,
                                 url.content,
                                 url.label,
                                 url.isLink,
@@ -290,6 +450,8 @@ class MessageTextUtils {
             }
 
             val spannableString = SpannableString(textToCheck)
+
+            w{"$descriptors"}
 
             descriptors.forEach { content ->
                 if (content.isLink) {
@@ -316,6 +478,9 @@ class MessageTextUtils {
                     spannableString.setSpan(LeadingMarginSpan.Standard(INSET_WIDTH, INSET_WIDTH), content.startIndex, content.endIndex, 0)
                 }
                 if (content.isBullet) {
+                    spannableString.setSpan(BulletSpanWithRadius(INSET_WIDTH / 6, INSET_WIDTH), content.startIndex, content.endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+                if (content.isNumbered) {
                     spannableString.setSpan(BulletSpanWithRadius(INSET_WIDTH / 6, INSET_WIDTH), content.startIndex, content.endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
@@ -353,31 +518,33 @@ class MessageTextUtils {
                                  var isItalic: Boolean = false, var isStroke: Boolean = false,
                                  var isQuote: Boolean = false,
                                  var isBullet: Boolean = false,
-                                 var isNumbered: Boolean = false, var offset: Int = 0, @MarkDown.MarkDowns var surrounding: Long = MarkDown.NONE, var beginIndex: Int = 0, var endIndex: Int = 0) {
+                                 var isNumbered: Boolean = false, var offset: Int = 0, @MarkDownType.MarkDowns var surrounding: Long = MarkDownType.NONE, var beginIndex: Int = 0, var endIndex: Int = 0) {
         fun toTag(): String {
             if (content.contains("|")) {
                 content = content.split("|")[1]
             }
             return when (surrounding) {
-                MarkDown.LINK -> {
+                MarkDownType.LINK -> {
                     var swapData = "<$content"
                     label?.run {
                         swapData += "|$label"
                     }
                     "$swapData>"
                 }
-                MarkDown.BOLD -> "*$content*"
-                MarkDown.ITALIC -> "_${content}_"
-                MarkDown.STROKE -> "~$content~"
-                MarkDown.QUOTE -> ">$content"
-                MarkDown.BULLET -> "-$content"
-                MarkDown.NUMBERED -> "$label $content"
+                MarkDownType.BOLD -> "*$content*"
+                MarkDownType.ITALIC -> "_${content}_"
+                MarkDownType.STROKE -> "~$content~"
+                MarkDownType.QUOTE -> ">$content"
+                MarkDownType.BULLET -> "-$content"
+                MarkDownType.NUMBERED -> "$label.$content"
                 else -> content
             }
         }
 
         fun getLabelToDisplay(): String {
-            return label ?: content
+            return if(isNumbered) content else label ?: content
         }
-    }
+    }*/
 }
+
+

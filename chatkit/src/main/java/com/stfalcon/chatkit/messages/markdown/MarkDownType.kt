@@ -1,4 +1,4 @@
-package com.stfalcon.chatkit.messages
+package com.stfalcon.chatkit.messages.markdown
 
 import android.support.annotation.IntDef
 
@@ -12,7 +12,7 @@ import android.support.annotation.IntDef
  * 29-03-2018 - Grzegorz Pawełczuk - BULLET,NUMBERED ++
  */
 
-object MarkDown {
+object MarkDownType {
 
     const val NONE = 0L
     const val ITALIC = 1L
@@ -23,7 +23,10 @@ object MarkDown {
     const val BULLET = 6L
     const val NUMBERED = 7L
 
+    @Target(AnnotationTarget.TYPE)
     @Retention(AnnotationRetention.SOURCE)
     @IntDef(NONE, BOLD, ITALIC, STROKE, LINK, QUOTE, BULLET, NUMBERED)
     internal annotation class MarkDowns
+
 }
+
