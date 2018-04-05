@@ -72,6 +72,15 @@ object Link : MarkDown() {
             data
         }
     }
+    override fun getAttribute(text: String): String {
+        val data = text.substring(getStart(), text.length - getEnd())
+        return if (data.contains("|")) {
+            val split = data.split("|")
+            split[0]
+        } else {
+            data
+        }
+    }
 }
 
 object Quote : MarkDown() {
@@ -93,6 +102,11 @@ object Bullet : MarkDown() {
     override fun getStart(): Int = 1
     override fun getEnd(): Int = 0
     override fun getRegex(): String = "(-)(.+)"
+    override fun getLabel(text: String): String {
+        return Regex(getRegex()).replace(text){ match ->
+            match.value.substring(getStart())
+        }
+    }
 }
 
 object Number : MarkDown() {

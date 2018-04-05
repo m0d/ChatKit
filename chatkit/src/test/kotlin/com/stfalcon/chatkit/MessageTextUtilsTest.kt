@@ -344,8 +344,8 @@ class MessageTextUtilsTest {
 //        val markup = "test1\ntest2 *test3*"
 //        val markup = "test1\ntest2 *_test3_*"
 //        val markup = ">test1 *_test2_*\ntest3 *_test4_*"
-        val markup = ">test1 alibaba _*test2*_ _*test3*_ ~*_test4_*~\n~test5 *_test6_*~"
-
+//        val markup = ">test1 alibaba _*test2*_ _*test3*_ ~*_test4_*~\n~test5 *_test6_*~"
+        val markup = ">test1 _*<http://example.com/test/path>*_"
         MessageTextUtils.transform(markup, android.R.color.black)
 
         assertEquals(false, false)
