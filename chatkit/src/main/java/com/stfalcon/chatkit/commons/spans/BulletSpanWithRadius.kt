@@ -19,7 +19,7 @@ import android.text.style.LeadingMarginSpan
  * Default implementation doesn't allow for radius modification
  */
 
-class BulletSpanWithRadius(private val mGapWidth: Int = STANDARD_GAP_WIDTH, private val mColor: Int = Color.TRANSPARENT, val forceRecalculate: Boolean = false) : LeadingMarginSpan {
+class BulletSpanWithRadius(private val mGapWidth: Int = STANDARD_GAP_WIDTH, private val mColor: Int = Color.TRANSPARENT, private val forceRecalculate: Boolean = false) : LeadingMarginSpan {
 
     companion object {
         const val STANDARD_GAP_WIDTH = 2

@@ -58,7 +58,7 @@ class MessageTextUtils {
         fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int) {
             Single.fromCallable {
                 val text = EmojiTextUtils.transform(fromEntities(rawText))
-                MessageTextUtils.transform(text, linkColor, view.textSize)
+                MessageTextUtils.transform(text, linkColor)
             }
                     .subscribeOn(io.reactivex.schedulers.Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -68,12 +68,12 @@ class MessageTextUtils {
                     }, { e -> w { "${e.message}" } })
         }
 
-        fun transform(text: String, @ColorInt linkColor: Int, textSize: Float = 20F): CharSequence {
+        fun transform(text: String, @ColorInt linkColor: Int): CharSequence {
             val data = fromEntities(text)
             separator()
             log(data, "input")
             separator()
-            return toSpannableText(fromEntities(text), linkColor, textSize)
+            return toSpannableText(fromEntities(text), linkColor)
         }
 
         private fun log(text: String?, suffix: String? = null) {
@@ -85,7 +85,7 @@ class MessageTextUtils {
             System.out.println(logData)
         }
 
-        fun toSpannableText(text: String, @ColorInt linkColor: Int, textSize: Float): CharSequence {
+        fun toSpannableText(text: String, @ColorInt linkColor: Int): CharSequence {
             val textLines = text.split(LINE_DELIMITER)
             val output: Array<CharSequence?> = arrayOfNulls(textLines.size)
             var extraChar: String
@@ -102,13 +102,13 @@ class MessageTextUtils {
                     ""
                 }
                 val lineSpan = getLineSpan(line)
-                output[index] = addSpannables(lineSpan.first + extraChar, lineSpan.second, linkColor, textSize)
+                output[index] = addSpannables(lineSpan.first + extraChar, lineSpan.second, linkColor)
             }
 
             return TextUtils.concat(*output)
         }
 
-        fun addSpannables(text: String, spannables: MutableList<MarkDownPattern>, linkColor: Int, textSize: Float): CharSequence {
+        fun addSpannables(text: String, spannables: MutableList<MarkDownPattern>, linkColor: Int): CharSequence {
             val output = SpannableString(text)
             spannables.forEach {
                 with(output) {
@@ -120,7 +120,7 @@ class MessageTextUtils {
                         is Bullet -> setSpan(BulletSpanWithRadius(INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                         is Number -> {
                             val mRowNumber = it.markDown.getAttribute(it.beforeText)
-                            if (mRowNumber.isNotEmpty()) {
+                            if(mRowNumber.isNotEmpty()) {
                                 setSpan(NumberedSpan("$mRowNumber.", INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                             }
                         }
