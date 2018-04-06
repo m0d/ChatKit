@@ -11,6 +11,7 @@ import android.widget.TextView
 import com.github.ajalt.timberkt.w
 import com.stfalcon.chatkit.commons.spans.BulletSpanWithRadius
 import com.stfalcon.chatkit.commons.spans.CustomUrlSpan
+import com.stfalcon.chatkit.commons.spans.NumberedSpan
 import com.stfalcon.chatkit.messages.markdown.*
 import com.stfalcon.chatkit.messages.markdown.Number
 import io.reactivex.Single
@@ -20,7 +21,7 @@ import java.util.regex.Pattern
 /**
  * @author Grzegorz Pawełczuk <grzegorz.pawelczuk@ftlearning.com>
  * Nikkei FT Learning Limited
- * @since 04.01.2018
+ * @since 04.04.2018
  */
 
 class MessageTextUtils {
@@ -31,7 +32,7 @@ class MessageTextUtils {
         private val SINGLE_LINE_MARKDOWNS: List<MarkDown> by lazy { SUPPORTED_MARKDOWNS.filter { it.isFullLine() } }
         private val SUBSEQUENT_MARKDOWNS: List<MarkDown>  by lazy { SUPPORTED_MARKDOWNS.filter { !it.isFullLine() } }
 
-        private const val INSET_WIDTH = 32
+        private const val INSET_WIDTH = 100
 
         data class MarkDownPatternIndexer(val startIndex: Int, val markDown: MarkDown)
         data class MarkDownPattern(val afterText: String, val afterStartIndex: Int, val afterEndIndex: Int, val markDown: MarkDown, val beforeText: String)
@@ -57,7 +58,7 @@ class MessageTextUtils {
         fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int) {
             Single.fromCallable {
                 val text = EmojiTextUtils.transform(fromEntities(rawText))
-                MessageTextUtils.transform(text, linkColor)
+                MessageTextUtils.transform(text, linkColor, view.textSize)
             }
                     .subscribeOn(io.reactivex.schedulers.Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -67,12 +68,12 @@ class MessageTextUtils {
                     }, { e -> w { "${e.message}" } })
         }
 
-        fun transform(text: String, @ColorInt linkColor: Int): CharSequence {
+        fun transform(text: String, @ColorInt linkColor: Int, textSize: Float = 20F): CharSequence {
             val data = fromEntities(text)
             separator()
             log(data, "input")
             separator()
-            return toSpannableText(fromEntities(text), linkColor)
+            return toSpannableText(fromEntities(text), linkColor, textSize)
         }
 
         private fun log(text: String?, suffix: String? = null) {
@@ -84,9 +85,10 @@ class MessageTextUtils {
             System.out.println(logData)
         }
 
-        private fun toSpannableText(text: String, @ColorInt linkColor: Int): CharSequence {
+        fun toSpannableText(text: String, @ColorInt linkColor: Int, textSize: Float): CharSequence {
             val textLines = text.split(LINE_DELIMITER)
             val output: Array<CharSequence?> = arrayOfNulls(textLines.size)
+            var extraChar: String
 
             log(textLines.toString(), "lines")
             separator()
@@ -94,13 +96,19 @@ class MessageTextUtils {
             textLines.forEachIndexed { index, line ->
                 separator()
                 log(line, "process index $index")
+                extraChar = if (index < textLines.size - 1) {
+                    LINE_DELIMITER
+                } else {
+                    ""
+                }
                 val lineSpan = getLineSpan(line)
-                output[index] = addSpannables(lineSpan.first, lineSpan.second, linkColor)
+                output[index] = addSpannables(lineSpan.first + extraChar, lineSpan.second, linkColor, textSize)
             }
+
             return TextUtils.concat(*output)
         }
 
-        private fun addSpannables(text: String, spannables: MutableList<MarkDownPattern>, linkColor: Int): CharSequence {
+        fun addSpannables(text: String, spannables: MutableList<MarkDownPattern>, linkColor: Int, textSize: Float): CharSequence {
             val output = SpannableString(text)
             spannables.forEach {
                 with(output) {
@@ -109,8 +117,13 @@ class MessageTextUtils {
                         is Italic -> setSpan(StyleSpan(Typeface.ITALIC), it.afterStartIndex, it.afterEndIndex, 0)
                         is Strike -> setSpan(StrikethroughSpan(), it.afterStartIndex, it.afterEndIndex, 0)
                         is Quote -> setSpan(LeadingMarginSpan.Standard(INSET_WIDTH, INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, 0)
-                        is Bullet -> setSpan(BulletSpanWithRadius(INSET_WIDTH / 6, INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        is Number -> setSpan(BulletSpanWithRadius(INSET_WIDTH / 6, INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        is Bullet -> setSpan(BulletSpanWithRadius(INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        is Number -> {
+                            val mRowNumber = it.markDown.getAttribute(it.beforeText)
+                            if (mRowNumber.isNotEmpty()) {
+                                setSpan(NumberedSpan("$mRowNumber.", INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                            }
+                        }
                         is Link -> {
                             setSpan(CustomUrlSpan(it.afterText), it.afterStartIndex, it.afterEndIndex, 0)
                             setSpan(ForegroundColorSpan(linkColor), it.afterStartIndex, it.afterEndIndex, 0)
@@ -121,7 +134,7 @@ class MessageTextUtils {
             return output
         }
 
-        private fun getLineSpan(singleLine: String): Pair<String, MutableList<MarkDownPattern>> {
+        fun getLineSpan(singleLine: String): Pair<String, MutableList<MarkDownPattern>> {
             val spans: MutableList<MarkDownPattern> = mutableListOf()
             val sequentSpans: MutableList<MarkDownPattern> = mutableListOf()
             val sequentSpansOrder: MutableList<MarkDownPatternIndexer> = mutableListOf()
@@ -131,9 +144,11 @@ class MessageTextUtils {
             SINGLE_LINE_MARKDOWNS.forEach {
                 val matches = it.matches(singleLine)
                 if (matches) {
+                    val memoryText = output
                     output = it.getLabel(output)
+
                     val stripMarkdown = output.stripMarkdown(SUPPORTED_MARKDOWNS)
-                    spans.add(MarkDownPattern(stripMarkdown, 0, stripMarkdown.length, it, output))
+                    spans.add(MarkDownPattern(stripMarkdown, 0, stripMarkdown.length, it, memoryText))
                     return@forEach // there is only one single line markdown
                 }
             }
@@ -177,7 +192,7 @@ class MessageTextUtils {
             return Pair(lineOutput, spans)
         }
 
-        private fun String.stripMarkdown(markDowns: List<MarkDown>): String {
+        fun String.stripMarkdown(markDowns: List<MarkDown>): String {
             separator()
             var value = this
             var group: String

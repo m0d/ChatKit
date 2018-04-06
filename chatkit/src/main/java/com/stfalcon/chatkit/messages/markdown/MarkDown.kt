@@ -13,7 +13,6 @@ abstract class MarkDown{
     abstract fun getStart() : Int
     abstract fun getEnd() : Int
     abstract fun isFullLine(): Boolean
-    abstract fun getType(): @MarkDownType.MarkDowns Long
     abstract fun getRegex(): String
     open fun getPattern(): Pattern = Pattern.compile(getRegex())
     open fun matches(text: String): Boolean = getPattern().matcher(text).find()
@@ -26,7 +25,6 @@ abstract class MarkDown{
 
 object Bold : MarkDown() {
     override fun isFullLine(): Boolean = false
-    override fun getType(): Long = MarkDownType.BOLD
     override fun getStart(): Int = 1
     override fun getEnd(): Int = 1
     override fun getRegex(): String = "(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))"
@@ -37,7 +35,6 @@ object Bold : MarkDown() {
 
 object Italic : MarkDown() {
     override fun isFullLine(): Boolean = false
-    override fun getType(): Long = MarkDownType.ITALIC
     override fun getStart(): Int = 1
     override fun getEnd(): Int = 1
     override fun getRegex(): String = "(?<!(([\\p{Alnum}])|_))_([^_\\n]+)_(?!(([\\p{Alnum}])|_))"
@@ -48,7 +45,6 @@ object Italic : MarkDown() {
 
 object Strike : MarkDown() {
     override fun isFullLine(): Boolean = false
-    override fun getType(): Long = MarkDownType.STROKE
     override fun getStart(): Int = 1
     override fun getEnd(): Int = 1
     override fun getRegex(): String = "(?<!(([\\p{Alnum}])|~))~([^~\\n]+)~(?!(([\\p{Alnum}])|~))"
@@ -59,7 +55,6 @@ object Strike : MarkDown() {
 
 object Link : MarkDown() {
     override fun isFullLine(): Boolean = false
-    override fun getType(): Long = MarkDownType.LINK
     override fun getStart(): Int = 1
     override fun getEnd(): Int = 1
     override fun getRegex(): String = "<([a-zA-Z]{2,10}:(.*?))>"
@@ -85,7 +80,6 @@ object Link : MarkDown() {
 
 object Quote : MarkDown() {
     override fun isFullLine(): Boolean = true
-    override fun getType(): Long = MarkDownType.QUOTE
     override fun getStart(): Int = 1
     override fun getEnd(): Int = 0
     override fun getRegex(): String = "^>(.+)"
@@ -98,7 +92,6 @@ object Quote : MarkDown() {
 
 object Bullet : MarkDown() {
     override fun isFullLine(): Boolean = true
-    override fun getType(): Long = MarkDownType.BULLET
     override fun getStart(): Int = 1
     override fun getEnd(): Int = 0
     override fun getRegex(): String = "(-)(.+)"
@@ -111,7 +104,6 @@ object Bullet : MarkDown() {
 
 object Number : MarkDown() {
     override fun isFullLine(): Boolean = true
-    override fun getType(): Long = MarkDownType.NUMBERED
     override fun getStart(): Int = -1
     override fun getEnd(): Int = 0
     override fun getRegex(): String = "^(\\d+).(.+)"
