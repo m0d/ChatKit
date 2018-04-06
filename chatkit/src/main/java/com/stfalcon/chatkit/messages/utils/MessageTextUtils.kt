@@ -28,15 +28,12 @@ import java.util.regex.Pattern
 class MessageTextUtils {
 
     companion object {
-        private val LINE_DELIMITER by lazy { System.lineSeparator() }
-        private val SUPPORTED_MARKDOWNS: List<MarkDown>   by lazy { listOf(Bold, Italic, Strike, Link, Quote, Bullet, Number) }
+        internal val LINE_DELIMITER by lazy { System.lineSeparator() }
+        val SUPPORTED_MARKDOWNS: List<MarkDown>   by lazy { listOf(Bold, Italic, Strike, Link, Quote, Bullet, Number) }
         private val SINGLE_LINE_MARKDOWNS: List<MarkDown> by lazy { SUPPORTED_MARKDOWNS.filter { it.isFullLine() } }
         private val SUBSEQUENT_MARKDOWNS: List<MarkDown>  by lazy { SUPPORTED_MARKDOWNS.filter { !it.isFullLine() } }
 
         private const val INSET_WIDTH = 90
-
-        data class MarkDownPatternIndexer(val startIndex: Int, val markDown: MarkDown)
-        data class MarkDownPattern(val afterText: String, val afterStartIndex: Int, val afterEndIndex: Int, val markDown: MarkDown, val beforeText: String)
 
         private fun separator() = log("----------------------------------------------------------")
         private fun paragraph() = log("-------------")
@@ -48,7 +45,7 @@ class MessageTextUtils {
                 "\u2029" to "\n"
         )
 
-        private fun fromEntities(text: String): String {
+        fun fromEntities(text: String): String {
             var data = text
             mEntityMap.forEach {
                 data = data.replace(it.key, it.value)
@@ -69,12 +66,17 @@ class MessageTextUtils {
                     }, { e -> w { "${e.message}" } })
         }
 
-        fun transform(text: String, @ColorInt notifyColor: Int): CharSequence {
+        private fun transform(text: String, @ColorInt notifyColor: Int): CharSequence {
             val data = fromEntities(text)
             separator()
             log(data, "input")
             separator()
-            return toSpannableText(fromEntities(text), notifyColor)
+            val lines = toLinePatterns(fromEntities(text))
+            val output: Array<CharSequence?> = arrayOfNulls(lines.size)
+            lines.forEachIndexed { index, line ->
+                output[index] = addSpannables(line.text, line.patterns, notifyColor)
+            }
+            return TextUtils.concat(*output)
         }
 
         private fun log(text: String?, suffix: String? = null) {
@@ -83,13 +85,13 @@ class MessageTextUtils {
                 logData += "$suffix: "
             }
             logData += text
-            System.out.println(logData)
+            //System.out.println(logData)
         }
 
-        fun toSpannableText(text: String, @ColorInt notifyColor: Int): CharSequence {
+        fun toLinePatterns(text: String): MutableList<SingleLinePattern> {
             val textLines = text.split(LINE_DELIMITER)
-            val output: Array<CharSequence?> = arrayOfNulls(textLines.size)
             var extraChar: String
+            val singleLines: MutableList<SingleLinePattern> = mutableListOf()
 
             log(textLines.toString(), "lines")
             separator()
@@ -103,13 +105,13 @@ class MessageTextUtils {
                     ""
                 }
                 val lineSpan = getLineSpan(line)
-                output[index] = addSpannables(lineSpan.first + extraChar, lineSpan.second, notifyColor)
+                singleLines.add(SingleLinePattern(lineSpan.first + extraChar, lineSpan.second))
             }
 
-            return TextUtils.concat(*output)
+            return singleLines
         }
 
-        fun addSpannables(text: String, patterns: MutableList<MarkDownPattern>, notifyColor: Int): CharSequence {
+        private fun addSpannables(text: String, patterns: MutableList<MarkDownPattern>, notifyColor: Int): CharSequence {
             val output = SpannableString(text)
             patterns.forEach {
                 with(output) {
@@ -192,23 +194,35 @@ class MessageTextUtils {
             log(output, "output")
             return Pair(lineOutput, spans)
         }
-
-        fun String.stripMarkdown(markDowns: List<MarkDown>): String {
-            separator()
-            var value = this
-            var group: String
-            markDowns.forEach {
-                val matcher = Pattern.compile(it.getRegex()).matcher(value)
-                while (matcher.find()) {
-                    group = matcher.group()
-                    value = value.replace(group, it.getLabel(group))
-                    log(value, "after value")
-                    paragraph()
-                }
-            }
-            return value
-        }
     }
+}
+
+data class MarkDownPatternIndexer(val startIndex: Int, val markDown: MarkDown)
+data class MarkDownPattern(val afterText: String, val afterStartIndex: Int, val afterEndIndex: Int, val markDown: MarkDown, val beforeText: String)
+data class SingleLinePattern(val text: String, val patterns: MutableList<MarkDownPattern>)
+
+fun String.stripMarkdown(markDowns: List<MarkDown>, isMultiLine: Boolean = false): String {
+    var group: String
+    var valueList: List<String> = listOf(this)
+    val outputList: MutableList<String> = mutableListOf()
+
+    if(isMultiLine && this.contains(MessageTextUtils.LINE_DELIMITER)){
+        valueList = this.split(MessageTextUtils.LINE_DELIMITER)
+    }
+
+    valueList.forEach { lineValue ->
+        var line = lineValue
+        markDowns.forEach {
+            val matcher = Pattern.compile(it.getRegex()).matcher(line)
+            while (matcher.find()) {
+                group = matcher.group()
+
+                line = line.replace(group, it.getLabel(group))
+            }
+        }
+        outputList.add(line)
+    }
+    return outputList.joinToString( MessageTextUtils.LINE_DELIMITER )
 }
 
 

@@ -95,7 +95,7 @@ object Bullet : MarkDown() {
     override fun isFullLine(): Boolean = true
     override fun getStart(): Int = 1
     override fun getEnd(): Int = 0
-    override fun getRegex(): String = "(-)(.+)"
+    override fun getRegex(): String = "^-(.+)"
     override fun getLabel(text: String): String {
         return Regex(getRegex()).replace(text){ match ->
             match.value.substring(getStart())
