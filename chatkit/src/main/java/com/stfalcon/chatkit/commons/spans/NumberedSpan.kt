@@ -38,12 +38,12 @@ class NumberedSpan(
             val styleMem = paint.style
             val sizeMem  = paint.textSize
             val alignMem = paint.textAlign
-            var oldColor = 0
+            val oldColor = paint.color
 
             if (mWantColor) {
-                oldColor = paint.color
                 paint.color = mColor
             }
+
             with(paint) {
                 style = Paint.Style.FILL
                 textSize = sizeMem * TEXT_SIZE_RATIO_FACTOR
@@ -52,11 +52,8 @@ class NumberedSpan(
 
             canvas.drawText(mRowNumber, x.toFloat() + mGapWidth - mNumberToTextMargin, baseline.toFloat(), paint)
 
-            if (mWantColor) {
-                paint.color = oldColor
-            }
-
             with(paint) {
+                color = oldColor
                 style = styleMem
                 textSize = sizeMem
                 textAlign = alignMem

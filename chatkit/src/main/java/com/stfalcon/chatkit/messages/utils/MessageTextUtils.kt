@@ -12,6 +12,7 @@ import com.github.ajalt.timberkt.w
 import com.stfalcon.chatkit.commons.spans.BulletSpanWithRadius
 import com.stfalcon.chatkit.commons.spans.CustomUrlSpan
 import com.stfalcon.chatkit.commons.spans.NumberedSpan
+import com.stfalcon.chatkit.commons.spans.QuoteSpan
 import com.stfalcon.chatkit.messages.markdown.*
 import com.stfalcon.chatkit.messages.markdown.Number
 import io.reactivex.Single
@@ -32,7 +33,7 @@ class MessageTextUtils {
         private val SINGLE_LINE_MARKDOWNS: List<MarkDown> by lazy { SUPPORTED_MARKDOWNS.filter { it.isFullLine() } }
         private val SUBSEQUENT_MARKDOWNS: List<MarkDown>  by lazy { SUPPORTED_MARKDOWNS.filter { !it.isFullLine() } }
 
-        private const val INSET_WIDTH = 100
+        private const val INSET_WIDTH = 90
 
         data class MarkDownPatternIndexer(val startIndex: Int, val markDown: MarkDown)
         data class MarkDownPattern(val afterText: String, val afterStartIndex: Int, val afterEndIndex: Int, val markDown: MarkDown, val beforeText: String)
@@ -55,10 +56,10 @@ class MessageTextUtils {
             return data
         }
 
-        fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int) {
+        fun applyTextTransformations(view: TextView, rawText: String, @ColorInt notifyColor: Int) {
             Single.fromCallable {
                 val text = EmojiTextUtils.transform(fromEntities(rawText))
-                MessageTextUtils.transform(text, linkColor)
+                MessageTextUtils.transform(text, notifyColor)
             }
                     .subscribeOn(io.reactivex.schedulers.Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -68,12 +69,12 @@ class MessageTextUtils {
                     }, { e -> w { "${e.message}" } })
         }
 
-        fun transform(text: String, @ColorInt linkColor: Int): CharSequence {
+        fun transform(text: String, @ColorInt notifyColor: Int): CharSequence {
             val data = fromEntities(text)
             separator()
             log(data, "input")
             separator()
-            return toSpannableText(fromEntities(text), linkColor)
+            return toSpannableText(fromEntities(text), notifyColor)
         }
 
         private fun log(text: String?, suffix: String? = null) {
@@ -85,7 +86,7 @@ class MessageTextUtils {
             System.out.println(logData)
         }
 
-        fun toSpannableText(text: String, @ColorInt linkColor: Int): CharSequence {
+        fun toSpannableText(text: String, @ColorInt notifyColor: Int): CharSequence {
             val textLines = text.split(LINE_DELIMITER)
             val output: Array<CharSequence?> = arrayOfNulls(textLines.size)
             var extraChar: String
@@ -102,31 +103,31 @@ class MessageTextUtils {
                     ""
                 }
                 val lineSpan = getLineSpan(line)
-                output[index] = addSpannables(lineSpan.first + extraChar, lineSpan.second, linkColor)
+                output[index] = addSpannables(lineSpan.first + extraChar, lineSpan.second, notifyColor)
             }
 
             return TextUtils.concat(*output)
         }
 
-        fun addSpannables(text: String, spannables: MutableList<MarkDownPattern>, linkColor: Int): CharSequence {
+        fun addSpannables(text: String, patterns: MutableList<MarkDownPattern>, notifyColor: Int): CharSequence {
             val output = SpannableString(text)
-            spannables.forEach {
+            patterns.forEach {
                 with(output) {
                     when (it.markDown) {
-                        is Bold -> setSpan(StyleSpan(Typeface.BOLD), it.afterStartIndex, it.afterEndIndex, 0)
-                        is Italic -> setSpan(StyleSpan(Typeface.ITALIC), it.afterStartIndex, it.afterEndIndex, 0)
-                        is Strike -> setSpan(StrikethroughSpan(), it.afterStartIndex, it.afterEndIndex, 0)
-                        is Quote -> setSpan(LeadingMarginSpan.Standard(INSET_WIDTH, INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, 0)
-                        is Bullet -> setSpan(BulletSpanWithRadius(INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        is Number -> {
+                        Bold -> setSpan(StyleSpan(Typeface.BOLD), it.afterStartIndex, it.afterEndIndex, 0)
+                        Italic -> setSpan(StyleSpan(Typeface.ITALIC), it.afterStartIndex, it.afterEndIndex, 0)
+                        Strike -> setSpan(StrikethroughSpan(), it.afterStartIndex, it.afterEndIndex, 0)
+                        Quote -> setSpan(QuoteSpan(INSET_WIDTH * 2 / 3, notifyColor), it.afterStartIndex, it.afterEndIndex, 0)
+                        Bullet -> setSpan(BulletSpanWithRadius(INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        Number -> {
                             val mRowNumber = it.markDown.getAttribute(it.beforeText)
-                            if(mRowNumber.isNotEmpty()) {
+                            if (mRowNumber.isNotEmpty()) {
                                 setSpan(NumberedSpan("$mRowNumber.", INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                             }
                         }
-                        is Link -> {
+                        Link -> {
                             setSpan(CustomUrlSpan(it.afterText), it.afterStartIndex, it.afterEndIndex, 0)
-                            setSpan(ForegroundColorSpan(linkColor), it.afterStartIndex, it.afterEndIndex, 0)
+                            setSpan(ForegroundColorSpan(notifyColor), it.afterStartIndex, it.afterEndIndex, 0)
                         }
                     }
                 }

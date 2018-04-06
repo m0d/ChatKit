@@ -18,6 +18,7 @@ abstract class MarkDown{
     open fun matches(text: String): Boolean = getPattern().matcher(text).find()
     open fun find(text: String): MatchResult? = getRegex().toRegex().find(text)
     open fun getDynamicStart(text: String) : Int = 0
+    @Suppress("unused")
     open fun getDynamicEnd(text: String) : Int = 0
     open fun getLabel(text: String) : String = ""
     open fun getAttribute(text: String) : String = ""
