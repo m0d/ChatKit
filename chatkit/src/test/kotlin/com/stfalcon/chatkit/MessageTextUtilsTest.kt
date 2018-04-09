@@ -1,313 +1,176 @@
 package com.stfalcon.chatkit
 
-import com.stfalcon.chatkit.messages.MarkDown
+import com.stfalcon.chatkit.messages.markdown.*
+import com.stfalcon.chatkit.messages.utils.MarkDownPattern
 import com.stfalcon.chatkit.messages.utils.MessageTextUtils
+import com.stfalcon.chatkit.messages.utils.MessageTextUtils.Companion.LINE_DELIMITER
+import com.stfalcon.chatkit.messages.utils.MessageTextUtils.Companion.fromEntities
+import com.stfalcon.chatkit.messages.utils.MessageTextUtils.Companion.getLineSpan
+import com.stfalcon.chatkit.messages.utils.MessageTextUtils.Companion.toLinePatterns
+import com.stfalcon.chatkit.messages.utils.stripMarkdown
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
- * @author Maciej Madetko
- * @email maciej.madetko@ftlearning.com
+ * @author Grzegorz Pawełczuk
+ * @email grzegorz.pawelczuk@ftlearning.com
  * Nikkei FT Learning Limited
- * @since 20/02/2018.
- * 02-03-2018 - Grzegorz Pawełczuk - Quote test
+ * @since 06/04/2018.
  */
+
 class MessageTextUtilsTest {
-
-    @Test
-    fun strokeTest() {
-        val content = "~dajshdj~"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("dajshdj",
-                        null, false, false, false, true,
-                        false,
-                        surrounding = MarkDown.STROKE))
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun boldTest() {
-        val content = "*Lorem ipsum dolor sit amet*"
-        val contentWithoutMarkdown = "Lorem ipsum dolor sit amet"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(contentWithoutMarkdown,
-                        null, false, true, false, false,
-                        false,
-                        surrounding = MarkDown.BOLD))
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun italicTest() {
-        val content = "_dasdasdasd_"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("dasdasdasd",
-                        null, false, false, true, false,
-                        false,
-                        surrounding = MarkDown.ITALIC))
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun linkTest() {
-        val content = "<http://onet.pl>"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("http://onet.pl",
-                        null, true, false, false, false,
-                        false,
-                        surrounding = MarkDown.LINK))
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun boldWithLinkTest() {
-        val content = "test *<http://onet.pl>* *bold*"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("http://onet.pl",
-                        null, true, true, false, false,
-                        false,
-                        surrounding = MarkDown.LINK),
-                MessageTextUtils.PatternDescriptor("http://onet.pl",
-                        null, false, true, false, false,
-                        false,
-                        surrounding = MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor("bold",
-                        null, false, true, false, false,
-                        false,
-                        surrounding = MarkDown.BOLD))
-
-        val patterns = MessageTextUtils.getTextPatterns(content)
-        assertEquals(expected, patterns)
-    }
-
-    @Test
-    fun allMarkdownInlineTest() {
-        val content = MessageTextUtils.fromEntities("~dajshdj~ *bdsajjh* _dasdasdasd_ <dasdasfdfdssdf>")
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("dajshdj",
-                        null, false, false, false, true,
-                        false,
-                        surrounding = MarkDown.STROKE),
-                MessageTextUtils.PatternDescriptor("bdsajjh",
-                        null, false, true, false, false,
-                        false,
-                        surrounding = MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor("dasdasdasd",
-                        null, false, false, true, false,
-                        false,
-                        surrounding = MarkDown.ITALIC))
-
-        val patterns = MessageTextUtils.getTextPatterns(content)
-        assertEquals(expected, patterns)
-    }
-
-    @Test
-    fun sanitiseTest() {
-        val content = "m**********r"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf()
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun sanitiseAndBoldTest() {
-        val content = "**h*k* *word*"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("word", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD))
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun sanitiseTrailingTest() {
-        val content = "*dasadasa**"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf()
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun sanitiseLeadingTest() {
-        val content = "***w"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf()
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun emptyBoldTest() {
-        val content = "c * * t"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(" ", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD))
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun nullBoldTest() {
-        val content = "c ** t"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf()
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun welcomeBoldTest() {
-        val content = "Hi, *endry04* and *endry05*!"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("endry04", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor("endry05", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD)
-
+    companion object {
+        val INPUT: MutableList<String> = mutableListOf(
+                "*test1*",
+                " *test2*",
+                "_test3_",
+                " _test4_",
+                "~test5~",
+                " ~test6~",
+                ">test7",
+                "> test8",
+                "> test9 test test test test test",
+                "-test10",
+                "- test11",
+                "- test12 test test test test",
+                "1.test13",
+                "10.test14",
+                "10. test15",
+                "10. test16 test test test test test test test test test",
+                "hmmmm 10. test16 test test test test test test test test test",
+                "-~_*test fraze <https://www.google.com>*_~",
+                "-~_test fraze *<https://www.google.com>*_~",
+                ">test1 _*<http://example.com/test/path>*_\n-*after* <https://www.google.com|Terefere qq?>",
+                ">test1 alibaba _*test2*_ _*test3*_ ~*_test4_*~\n~test5 *_test6_*~",
+                "-test1\n-test2\n-test3\n&gt;test <test>",
+                "-test1\n-test2\n-test3\n&gt;test >test",
+                "1.test1 *<https://www.google.com>*\n2.test2 <https://www.google.com>\n-test3"
         )
 
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
+        val OUTPUT: MutableList<Pair<String, MutableList<MarkDownPattern>>> = mutableListOf(
+                Pair("test1", mutableListOf(MarkDownPattern(afterText = "test1", afterStartIndex = 0, afterEndIndex = 5, markDown = Bold, beforeText = "*test1*"))),
+                Pair(" test2", mutableListOf(MarkDownPattern(afterText = "test2", afterStartIndex = 1, afterEndIndex = 6, markDown = Bold, beforeText = "*test2*"))),
+                Pair("test3", mutableListOf(MarkDownPattern(afterText = "test3", afterStartIndex = 0, afterEndIndex = 5, markDown = Italic, beforeText = "_test3_"))),
+                Pair(" test4", mutableListOf(MarkDownPattern(afterText = "test4", afterStartIndex = 1, afterEndIndex = 6, markDown = Italic, beforeText = "_test4_"))),
+                Pair("test5", mutableListOf(MarkDownPattern(afterText = "test5", afterStartIndex = 0, afterEndIndex = 5, markDown = Strike, beforeText = "~test5~"))),
+                Pair(" test6", mutableListOf(MarkDownPattern(afterText = "test6", afterStartIndex = 1, afterEndIndex = 6, markDown = Strike, beforeText = "~test6~"))),
+                Pair("test7", mutableListOf(MarkDownPattern(afterText = "test7", afterStartIndex = 0, afterEndIndex = 5, markDown = Quote, beforeText = ">test7"))),
+                Pair(" test8", mutableListOf(MarkDownPattern(afterText = " test8", afterStartIndex = 0, afterEndIndex = 6, markDown = Quote, beforeText = "> test8"))),
+                Pair(" test9 test test test test test", mutableListOf(MarkDownPattern(afterText = " test9 test test test test test", afterStartIndex = 0, afterEndIndex = 31, markDown = Quote, beforeText = "> test9 test test test test test"))),
+                Pair("test10", mutableListOf(MarkDownPattern(afterText = "test10", afterStartIndex = 0, afterEndIndex = 6, markDown = Bullet, beforeText = "-test10"))),
+                Pair(" test11", mutableListOf(MarkDownPattern(afterText = " test11", afterStartIndex = 0, afterEndIndex = 7, markDown = Bullet, beforeText = "- test11"))),
+                Pair(" test12 test test test test", mutableListOf(MarkDownPattern(afterText = " test12 test test test test", afterStartIndex = 0, afterEndIndex = 27, markDown = Bullet, beforeText = "- test12 test test test test"))),
+                Pair("test13", mutableListOf(MarkDownPattern(afterText = "test13", afterStartIndex = 0, afterEndIndex = 6, markDown = Number, beforeText = "1.test13"))),
+                Pair("test14", mutableListOf(MarkDownPattern(afterText = "test14", afterStartIndex = 0, afterEndIndex = 6, markDown = Number, beforeText = "10.test14"))),
+                Pair(" test15", mutableListOf(MarkDownPattern(afterText = " test15", afterStartIndex = 0, afterEndIndex = 7, markDown = Number, beforeText = "10. test15"))),
+                Pair(" test16 test test test test test test test test test", mutableListOf(MarkDownPattern(afterText = " test16 test test test test test test test test test", afterStartIndex = 0, afterEndIndex = 52, markDown = Number, beforeText = "10. test16 test test test test test test test test test"))),
+                Pair("hmmmm 10. test16 test test test test test test test test test", mutableListOf()),
+                Pair("test fraze https://www.google.com", mutableListOf(
+                        MarkDownPattern(afterText = "test fraze https://www.google.com", afterStartIndex = 0, afterEndIndex = 33, markDown = Bullet, beforeText = "-~_*test fraze <https://www.google.com>*_~"),
+                        MarkDownPattern(afterText = "test fraze https://www.google.com", afterStartIndex = 0, afterEndIndex = 33, markDown = Strike, beforeText = "~_*test fraze <https://www.google.com>*_~"),
+                        MarkDownPattern(afterText = "test fraze https://www.google.com", afterStartIndex = 0, afterEndIndex = 33, markDown = Italic, beforeText = "_*test fraze <https://www.google.com>*_"),
+                        MarkDownPattern(afterText = "test fraze https://www.google.com", afterStartIndex = 0, afterEndIndex = 33, markDown = Bold, beforeText = "*test fraze <https://www.google.com>*"),
+                        MarkDownPattern(afterText = "https://www.google.com", afterStartIndex = 11, afterEndIndex = 33, markDown = Link, beforeText = "<https://www.google.com>")
+                )),
+                Pair("test fraze https://www.google.com", mutableListOf(
+                        MarkDownPattern(afterText = "test fraze https://www.google.com", afterStartIndex = 0, afterEndIndex = 33, markDown = Bullet, beforeText = "-~_test fraze *<https://www.google.com>*_~"),
+                        MarkDownPattern(afterText = "test fraze https://www.google.com", afterStartIndex = 0, afterEndIndex = 33, markDown = Strike, beforeText = "~_test fraze *<https://www.google.com>*_~"),
+                        MarkDownPattern(afterText = "test fraze https://www.google.com", afterStartIndex = 0, afterEndIndex = 33, markDown = Italic, beforeText = "_test fraze *<https://www.google.com>*_"),
+                        MarkDownPattern(afterText = "https://www.google.com", afterStartIndex = 11, afterEndIndex = 33, markDown = Bold, beforeText = "*<https://www.google.com>*"),
+                        MarkDownPattern(afterText = "https://www.google.com", afterStartIndex = 11, afterEndIndex = 33, markDown = Link, beforeText = "<https://www.google.com>")
+                )),
+                Pair("test1 http://example.com/test/path\nafter Terefere qq?", mutableListOf(
+                        MarkDownPattern(afterText="test1 http://example.com/test/path", afterStartIndex=0, afterEndIndex=34, markDown=Quote, beforeText=">test1 _*<http://example.com/test/path>*_"),
+                        MarkDownPattern(afterText="http://example.com/test/path", afterStartIndex=6, afterEndIndex=34, markDown=Italic, beforeText="_*<http://example.com/test/path>*_"),
+                        MarkDownPattern(afterText="http://example.com/test/path", afterStartIndex=6, afterEndIndex=34, markDown=Bold, beforeText="*<http://example.com/test/path>*"),
+                        MarkDownPattern(afterText="http://example.com/test/path", afterStartIndex=6, afterEndIndex=34, markDown=Link, beforeText="<http://example.com/test/path>"),
+                        MarkDownPattern(afterText="after Terefere qq?", afterStartIndex=0, afterEndIndex=18, markDown=Bullet, beforeText="-*after* <https://www.google.com|Terefere qq?>"),
+                        MarkDownPattern(afterText="after", afterStartIndex=0, afterEndIndex=5, markDown=Bold, beforeText="*after*"),
+                        MarkDownPattern(afterText="Terefere qq?", afterStartIndex=6, afterEndIndex=18, markDown=Link, beforeText="<https://www.google.com|Terefere qq?>")
+                )),
+                Pair("test1 alibaba test2 test3 test4\ntest5 test6", mutableListOf(
+                        MarkDownPattern(afterText="test1 alibaba test2 test3 test4", afterStartIndex=0, afterEndIndex=31, markDown=Quote, beforeText=">test1 alibaba _*test2*_ _*test3*_ ~*_test4_*~"),
+                        MarkDownPattern(afterText="test2", afterStartIndex=14, afterEndIndex=19, markDown=Italic, beforeText="_*test2*_"),
+                        MarkDownPattern(afterText="test2", afterStartIndex=14, afterEndIndex=19, markDown=Bold, beforeText="*test2*"),
+                        MarkDownPattern(afterText="test3", afterStartIndex=20, afterEndIndex=25, markDown=Italic, beforeText="_*test3*_"),
+                        MarkDownPattern(afterText="test3", afterStartIndex=20, afterEndIndex=25, markDown=Bold, beforeText="*test3*"),
+                        MarkDownPattern(afterText="test4", afterStartIndex=26, afterEndIndex=31, markDown=Strike, beforeText="~*_test4_*~"),
+                        MarkDownPattern(afterText="test4", afterStartIndex=26, afterEndIndex=31, markDown=Bold, beforeText="*_test4_*"),
+                        MarkDownPattern(afterText="test4", afterStartIndex=26, afterEndIndex=31, markDown=Italic, beforeText="_test4_"),
+                        MarkDownPattern(afterText="test5 test6", afterStartIndex=0, afterEndIndex=11, markDown=Strike, beforeText="~test5 *_test6_*~"),
+                        MarkDownPattern(afterText="test6", afterStartIndex=6, afterEndIndex=11, markDown=Bold, beforeText="*_test6_*"),
+                        MarkDownPattern(afterText="test6", afterStartIndex=6, afterEndIndex=11, markDown=Italic, beforeText="_test6_")
+                )),
+                Pair("test1\ntest2\ntest3\ntest <test>", mutableListOf(
+                        MarkDownPattern(afterText="test1", afterStartIndex=0, afterEndIndex=5, markDown=Bullet, beforeText="-test1"),
+                        MarkDownPattern(afterText="test2", afterStartIndex=0, afterEndIndex=5, markDown=Bullet, beforeText="-test2"),
+                        MarkDownPattern(afterText="test3", afterStartIndex=0, afterEndIndex=5, markDown=Bullet, beforeText="-test3"),
+                        MarkDownPattern(afterText="test <test>", afterStartIndex=0, afterEndIndex=11, markDown=Quote, beforeText=">test <test>")
+                )),
+                Pair("test1\ntest2\ntest3\ntest >test", mutableListOf(
+                        MarkDownPattern(afterText="test1", afterStartIndex=0, afterEndIndex=5, markDown=Bullet, beforeText="-test1"),
+                        MarkDownPattern(afterText="test2", afterStartIndex=0, afterEndIndex=5, markDown=Bullet, beforeText="-test2"),
+                        MarkDownPattern(afterText="test3", afterStartIndex=0, afterEndIndex=5, markDown=Bullet, beforeText="-test3"),
+                        MarkDownPattern(afterText="test >test", afterStartIndex=0, afterEndIndex=10, markDown=Quote, beforeText=">test >test")
 
-    @Test
-    fun specialCharsBoldTest() {
-        val content = "Hi,*endry04* and*endry05*!"
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("endry04", null,
-                        false, true, false, false, false, surrounding = MarkDown.BOLD)
-
+                )),
+                Pair("test1 https://www.google.com\ntest2 https://www.google.com\ntest3", mutableListOf(
+                        MarkDownPattern(afterText="test1 https://www.google.com", afterStartIndex=0, afterEndIndex=28, markDown=Number, beforeText="1.test1 *<https://www.google.com>*"),
+                        MarkDownPattern(afterText="https://www.google.com", afterStartIndex=6, afterEndIndex=28, markDown=Bold, beforeText="*<https://www.google.com>*"),
+                        MarkDownPattern(afterText="https://www.google.com", afterStartIndex=6, afterEndIndex=28, markDown=Link, beforeText="<https://www.google.com>"),
+                        MarkDownPattern(afterText="test2 https://www.google.com", afterStartIndex=0, afterEndIndex=28, markDown=Number, beforeText="2.test2 <https://www.google.com>"),
+                        MarkDownPattern(afterText="https://www.google.com", afterStartIndex=6, afterEndIndex=28, markDown=Link, beforeText="<https://www.google.com>"),
+                        MarkDownPattern(afterText="test3", afterStartIndex=0, afterEndIndex=5, markDown=Bullet, beforeText="-test3")
+                ))
         )
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-
-    @Test
-    fun quotationTest() {
-        val content = MessageTextUtils.fromEntities("Mark said before:\n&gt;I love cars\n and you know what? I am *OK* with that!")
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content = "I love cars", label = null,
-                        isLink = false, isBold = false, isItalic = false, isStroke = false, isQuote = true, beginIndex = 0, endIndex = 0, offset = 0,
-                        surrounding = MarkDown.QUOTE),
-                MessageTextUtils.PatternDescriptor(content = "OK", label = null,
-                        isLink = false, isBold = true, isItalic = false, isStroke = false, isQuote = false, beginIndex = 0, endIndex = 0, offset = 0,
-                        surrounding = MarkDown.BOLD)
-        )
-        val actual = MessageTextUtils.getTextPatterns(content)
-        assertEquals(expected, actual)
     }
 
     @Test
-    fun deepLinkTest() {
-        val content = MessageTextUtils.fromEntities("<somescheme://onet.pl/path1/path2|title: label with whitespaces>")
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("somescheme://onet.pl/path1/path2",
-                        "title: label with whitespaces", true, false, false, false,
-                        surrounding = MarkDown.LINK))
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    fun stripMarkdown() {
+        INPUT.forEachIndexed { index, fraze ->
+            val expectedResult = OUTPUT[index].first
+            val realResult = fromEntities(fraze).stripMarkdown(MessageTextUtils.SUPPORTED_MARKDOWNS, true)
+            assertEquals(expectedResult, realResult)
+        }
     }
 
     @Test
-    fun deepLinkUnderscoreTest() {
-        val content = MessageTextUtils.fromEntities("lead *<somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces>*")
-
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3", label="title: label with whitespaces", isLink=true, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.LINK),
-                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD)
-        )
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    fun spannableCountCheckTest() {
+        INPUT.forEachIndexed { index, fraze ->
+            val expectedResult = OUTPUT[index].second.size
+            val realResult = toLinePatterns(fromEntities(fraze)).toMutableList().sumBy { it.patterns.size }
+            assertEquals(expectedResult, realResult)
+        }
     }
 
     @Test
-    fun extraLongTest() {
-        val content = MessageTextUtils.fromEntities("dear xxx,\n• some text and write *_some fraze_*.\n• or *_I like it!_*, some text again... yyy is OK.\n Do *<somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces>*")
-
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="some fraze", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
-                MessageTextUtils.PatternDescriptor(content="some fraze", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="I like it!", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
-                MessageTextUtils.PatternDescriptor(content="I like it!", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3", label="title: label with whitespaces", isLink=true, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.LINK),
-                MessageTextUtils.PatternDescriptor(content="somescheme://onet.pl/path1/path2_underscore/path3|title: label with whitespaces", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=false, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD)
-        )
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    fun entitiesTest() {
+        assertEquals("<test>", fromEntities("&lt;test&gt;"))
+        assertEquals("?test=test&test=test", fromEntities("?test=test&amp;test=test"))
+        assertEquals("paragraph\nparagraph", fromEntities("paragraph\u2029paragraph"))
     }
 
     @Test
-    fun quoteTest() {
-        val content = MessageTextUtils.fromEntities("lead\n&gt;quote")
-
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
-        )
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun quoteFirstLineTest() {
-        val content = MessageTextUtils.fromEntities("&gt;quote")
-
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
-        )
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
-    }
-
-    @Test
-    fun quoteWithBoldTest() {
-        val content = "&gt;*quote*"
-
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
-        )
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
-    }
-
-    @Test
-    fun quoteWithBoldItalicTest() {
-        val content = "&gt;*_quote_*"
-
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=true, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="quote", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
-        )
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
-    }
-
-
-    @Test
-    fun quoteMultiTest() {
-        val content = "&gt;_kursywa jak zywa_ *bold z lupy*"
-
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor(content="kursywa jak zywa", label=null, isLink=false, isBold=false, isItalic=true, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.ITALIC),
-                MessageTextUtils.PatternDescriptor(content="bold z lupy", label=null, isLink=false, isBold=true, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.BOLD),
-                MessageTextUtils.PatternDescriptor(content="kursywa jak zywa bold z lupy", label=null, isLink=false, isBold=false, isItalic=false, isStroke=false, isQuote=true, beginIndex=0, endIndex=0, offset=0, surrounding=MarkDown.QUOTE)
-        )
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(MessageTextUtils.fromEntities(content)))
-    }
-
-    @Test
-    fun deepTest() {
-        val content = MessageTextUtils.fromEntities("<somescheme://onet.pl/test_blim_blam/path2|title: label with whitespaces>")
-        val expected: MutableList<MessageTextUtils.PatternDescriptor> = mutableListOf(
-                MessageTextUtils.PatternDescriptor("somescheme://onet.pl/test_blim_blam/path2",
-                        "title: label with whitespaces", true, false, false, false,
-                        surrounding = MarkDown.LINK))
-
-        assertEquals(expected, MessageTextUtils.getTextPatterns(content))
+    fun lineSpanTest() {
+        INPUT.forEachIndexed { index, fraze ->
+            if (!fraze.contains(LINE_DELIMITER)) {
+                assertEquals(OUTPUT[index], getLineSpan(fraze))
+            } else {
+                val split = fraze.split(LINE_DELIMITER)
+                val patterns : MutableList<MarkDownPattern> = mutableListOf()
+                val text : MutableList<String> = mutableListOf()
+                split.forEach{
+                    val element = getLineSpan(fromEntities(it))
+                    text.add(element.first)
+                    patterns.addAll(element.second)
+                }
+                val content = text.joinToString(LINE_DELIMITER)
+                assertEquals(OUTPUT[index], Pair(content, patterns))
+            }
+        }
+        assertTrue(true)
     }
 }
+
 
