@@ -206,7 +206,7 @@ data class MarkDownPatternIndexer(val startIndex: Int, val markDown: MarkDown)
 data class MarkDownPattern(val afterText: String, val afterStartIndex: Int, val afterEndIndex: Int, val markDown: MarkDown, val beforeText: String)
 data class SingleLinePattern(val text: String, val patterns: MutableList<MarkDownPattern>)
 
-internal fun String.stripMarkdown(markDowns: List<MarkDown>, isMultiLine: Boolean = false): String {
+fun String.stripMarkdown(markDowns: List<MarkDown>, isMultiLine: Boolean = false): String {
     var group: String
     var valueList: List<String> = listOf(this)
     val outputList: MutableList<String> = mutableListOf()
