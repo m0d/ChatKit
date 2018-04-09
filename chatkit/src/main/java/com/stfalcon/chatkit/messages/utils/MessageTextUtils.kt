@@ -28,6 +28,8 @@ import java.util.regex.Pattern
 class MessageTextUtils {
 
     companion object {
+        private const val DEBUG_LOG = false
+
         internal val LINE_DELIMITER by lazy { System.lineSeparator() }
         val SUPPORTED_MARKDOWNS: List<MarkDown>   by lazy { listOf(Bold, Italic, Strike, Link, Quote, Bullet, Number) }
         private val SINGLE_LINE_MARKDOWNS: List<MarkDown> by lazy { SUPPORTED_MARKDOWNS.filter { it.isFullLine() } }
@@ -79,13 +81,16 @@ class MessageTextUtils {
             return TextUtils.concat(*output)
         }
 
+        @Suppress("ConstantConditionIf")
         private fun log(text: String?, suffix: String? = null) {
             var logData = ""
             suffix?.run {
                 logData += "$suffix: "
             }
             logData += text
-            //System.out.println(logData)
+            if(DEBUG_LOG) {
+                System.out.println(logData)
+            }
         }
 
         fun toLinePatterns(text: String): MutableList<SingleLinePattern> {
