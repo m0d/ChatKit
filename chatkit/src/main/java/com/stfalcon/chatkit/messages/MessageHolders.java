@@ -568,7 +568,7 @@ public class MessageHolders {
     }
 
     @SuppressLint("RtlHardcoded")
-    public static Single<CharSequence> getTextTransformation(String text, int gravity, MessagesListStyle style){
+    public static CharSequence getTextTransformation(String text, int gravity, MessagesListStyle style){
         return MessageTextUtils.Companion.getTextTransformations(
                 text,
                 (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
