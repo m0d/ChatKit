@@ -1,5 +1,6 @@
 package com.stfalcon.chatkit.messages.utils
 
+import android.text.TextUtils
 import android.view.View
 import java.util.regex.Pattern
 
@@ -665,11 +666,11 @@ class EmojiTextUtils {
                 Pair("potable_water", 0x1F6B0)
         )
 
-        fun transform(text: String) : String{
+        fun transform(text: CharSequence) : CharSequence{
             return EmojiTextUtils.transformText(text, EmojiTextUtils.detectEmojis(text))
         }
 
-        fun detectEmojis(text: String): MutableList<EmojiDescriptor> {
+        fun detectEmojis(text: CharSequence): MutableList<EmojiDescriptor> {
             val list: MutableList<EmojiDescriptor> = mutableListOf()
             val pattern = Pattern.compile(":(.*?):")
             val matcher = pattern.matcher(text)
@@ -687,12 +688,16 @@ class EmojiTextUtils {
             return list
         }
 
-        fun transformText(text: String, descriptors: MutableList<EmojiDescriptor>): String {
+        fun transformText(text: CharSequence, descriptors: MutableList<EmojiDescriptor>): CharSequence {
             var transformedText = text
             var code: Int
             descriptors.forEach { descriptor: EmojiDescriptor ->
                 code = getEmoji(descriptor.content)
-                transformedText = transformedText.replace(descriptor.toTag(), String(Character.toChars(code)))
+                transformedText = TextUtils.replace(transformedText, arrayOf(
+                        descriptor.toTag()
+                ), arrayOf(
+                        String(Character.toChars(code))
+                ))
             }
             return transformedText
         }

@@ -560,7 +560,7 @@ public class MessageHolders {
     }
 
     @SuppressLint("RtlHardcoded")
-    public static void applyTextTransformation(TextView textView, String text, int gravity, MessagesListStyle style){
+    public static void applyTextTransformation(TextView textView, CharSequence text, int gravity, MessagesListStyle style){
         MessageTextUtils.Companion.applyTextTransformations(
                 textView,
                 text,
