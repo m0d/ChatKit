@@ -569,7 +569,7 @@ public class MessageHolders {
     }
 
     @SuppressLint("RtlHardcoded")
-    public static CharSequence getTextTransformation(String text, int gravity, @ColorInt  int attributeColor){
+    public static CharSequence getTextTransformation(String text, int attributeColor){
         return MessageTextUtils.Companion.getTextTransformations( text, attributeColor );
     }
 
