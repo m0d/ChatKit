@@ -68,9 +68,13 @@ class MessageTextUtils {
                     }, { e -> w { "${e.message}" } })
         }
 
-        fun getTextTransformations(rawText: String, @ColorInt notifyColor: Int): CharSequence {
-            val text = EmojiTextUtils.transform(fromEntities(rawText))
-            return MessageTextUtils.transform(text, notifyColor)
+        fun getTextTransformations(rawText: String?, @ColorInt notifyColor: Int): CharSequence? {
+            return if(rawText != null) {
+                val text = EmojiTextUtils.transform(fromEntities(rawText))
+                MessageTextUtils.transform(text, notifyColor)
+            }else{
+                null
+            }
         }
 
         private fun transform(text: String, @ColorInt notifyColor: Int): CharSequence {
