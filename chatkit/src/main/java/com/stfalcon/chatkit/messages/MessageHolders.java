@@ -533,7 +533,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                applyTextTransformation(text, message.getText(), Gravity.START, mStyle);
+                text.setText(message.getText());
             }
         }
 
@@ -596,7 +596,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                applyTextTransformation(text, message.getText(), Gravity.END, mStyle);
+                text.setText(message.getText());
             }
         }
 
