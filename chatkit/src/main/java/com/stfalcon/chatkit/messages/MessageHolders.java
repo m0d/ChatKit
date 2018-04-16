@@ -1,6 +1,7 @@
 package com.stfalcon.chatkit.messages;
 
 import android.annotation.SuppressLint;
+import android.support.annotation.ColorInt;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewCompat;
@@ -568,11 +569,8 @@ public class MessageHolders {
     }
 
     @SuppressLint("RtlHardcoded")
-    public static CharSequence getTextTransformation(String text, int gravity, MessagesListStyle style){
-        return MessageTextUtils.Companion.getTextTransformations(
-                text,
-                (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
-        );
+    public static CharSequence getTextTransformation(String text, int gravity, @ColorInt  int attributeColor){
+        return MessageTextUtils.Companion.getTextTransformations( text, attributeColor );
     }
 
     /**
