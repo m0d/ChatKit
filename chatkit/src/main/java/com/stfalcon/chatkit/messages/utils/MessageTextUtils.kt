@@ -3,303 +3,231 @@ package com.stfalcon.chatkit.messages.utils
 import android.graphics.Typeface
 import android.support.annotation.ColorInt
 import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextUtils
 import android.text.method.LinkMovementMethod
 import android.text.style.*
 import android.widget.TextView
 import com.github.ajalt.timberkt.w
-import com.stfalcon.chatkit.commons.events.CustomUrlSpan
-import com.stfalcon.chatkit.messages.MarkDown
-import com.stfalcon.chatkit.utils.NonbreakingSpan
+import com.stfalcon.chatkit.commons.spans.BulletSpanWithRadius
+import com.stfalcon.chatkit.commons.spans.CustomUrlSpan
+import com.stfalcon.chatkit.commons.spans.NumberedSpan
+import com.stfalcon.chatkit.commons.spans.QuoteSpan
+import com.stfalcon.chatkit.messages.markdown.*
+import com.stfalcon.chatkit.messages.markdown.Number
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import java.util.regex.Pattern
 
 /**
  * @author Grzegorz Pawełczuk <grzegorz.pawelczuk@ftlearning.com>
- * @author Mikołaj Kowal <mikolaj.kowal@nftlearning.com>
  * Nikkei FT Learning Limited
- * @since 04.01.2018
- * 13-2-2018 - Mikołaj Kowal - added support for nested expressions
- * 02-03-2018 - Grzegorz Pawełczuk - Quote support
+ * @since 04.04.2018
  */
-
 
 class MessageTextUtils {
 
     companion object {
+        const val DEBUG_LOG = false
 
-        private const val QUOTE_INSET = 32
+        internal val LINE_DELIMITER by lazy { System.lineSeparator() }
+        val SUPPORTED_MARKDOWNS: List<MarkDown>   by lazy { listOf(Bold, Italic, Strike, Link, Quote, Bullet, Number) }
+        private val SINGLE_LINE_MARKDOWNS: List<MarkDown> by lazy { SUPPORTED_MARKDOWNS.filter { it.isFullLine() } }
+        private val SUBSEQUENT_MARKDOWNS: List<MarkDown>  by lazy { SUPPORTED_MARKDOWNS.filter { !it.isFullLine() } }
 
-        fun applyTextTransformations(view: TextView, rawText: String, @ColorInt linkColor: Int) {
-            Single.fromCallable{
-                val text = EmojiTextUtils.transform(rawText)
-                MessageTextUtils.transform(text, linkColor)
+        private const val INSET_WIDTH = 90
+
+        private fun separator() = log("----------------------------------------------------------")
+        private fun paragraph() = log("-------------")
+
+        private val mEntityMap: Map<String, String> = mapOf(
+                "&gt;" to ">",
+                "&lt;" to "<",
+                "&amp;" to "&",
+                "\u2029" to "\n"
+        )
+
+        fun fromEntities(text: String): String {
+            var data = text
+            mEntityMap.forEach {
+                data = data.replace(it.key, it.value)
             }
-            .subscribeOn(io.reactivex.schedulers.Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ text ->
-                view.text = text
-                view.movementMethod = LinkMovementMethod.getInstance()
-            },{e -> w{"${e.message}"}})
+            return data
         }
 
-        private fun transform(text: String, @ColorInt linkColor: Int): SpannableString {
-            return MessageTextUtils.transform(text, getTextPatterns(text), linkColor)
+        fun applyTextTransformations(view: TextView, rawText: String, @ColorInt notifyColor: Int) {
+            Single.fromCallable {
+                val text = EmojiTextUtils.transform(fromEntities(rawText))
+                MessageTextUtils.transform(text, notifyColor)
+            }
+                    .subscribeOn(io.reactivex.schedulers.Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({ text ->
+                        view.text = text
+                        view.movementMethod = LinkMovementMethod.getInstance()
+                    }, { e -> w { "${e.message}" } })
         }
 
-        fun getTextPatterns(text: String): MutableList<PatternDescriptor> {
-            val list: MutableList<PatternDescriptor> = mutableListOf()
-            val pattern = Pattern.compile("(&gt;)(.*)|<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
-            val matcher = pattern.matcher(text)
-            while (matcher.find()) {
-                var group = matcher.group()
-                var isLink = false
-                var isBold = false
-                var isItalic = false
-                var isStroke = false
-                var isQuote = false
-                var surrounding = MarkDown.NONE
-                when {
-                    group.startsWith("&gt;") -> {
-                        isQuote = true
-                        surrounding = MarkDown.QUOTE
-                    }
-                    group.startsWith("<") -> {
-                        isLink = true
-                        surrounding = MarkDown.LINK
-                    }
-                    group.startsWith("*") -> {
-                        isBold = true
-                        surrounding = MarkDown.BOLD
-                    }
-                    group.startsWith("_") -> {
-                        isItalic = true
-                        surrounding = MarkDown.ITALIC
-                    }
-                    group.startsWith("~") -> {
-                        isStroke = true
-                        surrounding = MarkDown.STROKE
-                    }
-                }
-                group = group.substring(
-                        if (isQuote) 4 else 1,
-                        group.length - (if (!isQuote) 1 else 0)
-                )
-                if (findNextMarkDown(0, group) != -1) {
-                    val reqList = getTextPatterns(group)
-                    if (reqList.size > 0) {
-                        reqList.forEach { unit: PatternDescriptor ->
-                            when {
-                                isBold -> unit.isBold = true
-                                isItalic -> unit.isItalic = true
-                                isStroke -> unit.isStroke = true
-                                isLink -> unit.isLink = true
-                                isQuote -> unit.isQuote = true
-                            }
-                            list.add(unit)
-                        }
-                    }
-                }
-                var url: PatternDescriptor? = null
-                if (group.contains("|") && isLink) {
-                    val split = group.split("|")
-                    if (split.isNotEmpty()) {
-                        url = PatternDescriptor(removeMarkDowns(split[0]), removeMarkDowns(split[1]), true, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
-                    }
+        private fun transform(text: String, @ColorInt notifyColor: Int): CharSequence {
+            val data = fromEntities(text)
+            separator()
+            log(data, "input")
+            separator()
+            val lines = toLinePatterns(fromEntities(text))
+            val output: Array<CharSequence?> = arrayOfNulls(lines.size)
+            lines.forEachIndexed { index, line ->
+                output[index] = addSpannables(line.text, line.patterns, notifyColor)
+            }
+            return TextUtils.concat(*output)
+        }
+
+        @Suppress("ConstantConditionIf")
+        private fun log(text: String?, suffix: String? = null) {
+            var logData = ""
+            suffix?.run {
+                logData += "$suffix: "
+            }
+            logData += text
+            if(DEBUG_LOG) {
+                System.out.println(logData)
+            }
+        }
+
+        fun toLinePatterns(text: String): MutableList<SingleLinePattern> {
+            val textLines = text.split(LINE_DELIMITER)
+            var extraChar: String
+            val singleLines: MutableList<SingleLinePattern> = mutableListOf()
+
+            log(textLines.toString(), "lines")
+            separator()
+
+            textLines.forEachIndexed { index, line ->
+                separator()
+                log(line, "process index $index")
+                extraChar = if (index < textLines.size - 1) {
+                    LINE_DELIMITER
                 } else {
-                    url = PatternDescriptor(removeMarkDowns(group), null, isLink, isBold, isItalic, isStroke, isQuote, surrounding = surrounding)
+                    ""
                 }
-                url?.run {
-                    list.add(this)
-                }
+                val lineSpan = getLineSpan(line)
+                singleLines.add(SingleLinePattern(lineSpan.first + extraChar, lineSpan.second))
             }
-            return list
+
+            return singleLines
         }
 
-        private fun findNextMarkDown(currentIndex: Int, text: String): Int {
-            var closestIndex = Int.MAX_VALUE
-            val pattern = "*~<>_"
-            var thisIndex: Int
-            pattern.forEach { tag ->
-                thisIndex = text.indexOf(tag, currentIndex)
-                if (thisIndex != -1 && thisIndex < closestIndex) {
-                    closestIndex = thisIndex
-                }
-            }
-            if (closestIndex == Int.MAX_VALUE) {
-                return -1
-            }
-            return closestIndex
-        }
-
-        private fun removeMarkDowns(markDownText: String): String {
-            val pattern = Pattern.compile("<(.*?)>|(?<!(([\\p{Alnum}])|\\*))\\*([^*\\n]+)\\*(?!(([\\p{Alnum}])|\\*))|_(.*?)_|~(.*?)~")
-            val matcher = pattern.matcher(markDownText)
-            var text: String
-            var toReturn = markDownText
-            while (matcher.find()) {
-                text = matcher.group()
-                toReturn = text.substring(1, text.length - 1)
-            }
-
-            if (toReturn.startsWith("&gt;")) {
-                toReturn = toReturn.substring("&gt;".length, toReturn.length)
-            }
-
-            return toReturn
-        }
-
-        private fun howManyLevelsIn(url: PatternDescriptor): Int {
-            var i = -1
-            if (url.isBold) {
-                i += 1
-            }
-            if (url.isItalic) {
-                i += 1
-            }
-            if (url.isLink) {
-                i += 1
-            }
-            if (url.isStroke) {
-                i += 1
-            }
-            if (url.isQuote) {
-                i += 4
-            }
-            return i
-        }
-
-        private fun calculateOffset(urls: MutableList<PatternDescriptor>): MutableList<PatternDescriptor> {
-            var thisUrl: PatternDescriptor
-            for (i in 0 until urls.size) {
-                thisUrl = urls[i]
-                if (thisUrl.isLink && thisUrl.surrounding != MarkDown.LINK) {
-                    var j = 0
-                    var nextUrl: PatternDescriptor
-                    while (i + j < urls.size) {
-                        nextUrl = urls[i + j]
-                        if (nextUrl.surrounding == MarkDown.LINK) {
-                            thisUrl.offset = nextUrl.content.length + 1
-                            break
+        private fun addSpannables(text: String, patterns: MutableList<MarkDownPattern>, notifyColor: Int): CharSequence {
+            val output = SpannableString(text)
+            patterns.forEach {
+                with(output) {
+                    when (it.markDown) {
+                        Bold -> setSpan(StyleSpan(Typeface.BOLD), it.afterStartIndex, it.afterEndIndex, 0)
+                        Italic -> setSpan(StyleSpan(Typeface.ITALIC), it.afterStartIndex, it.afterEndIndex, 0)
+                        Strike -> setSpan(StrikethroughSpan(), it.afterStartIndex, it.afterEndIndex, 0)
+                        Quote -> setSpan(QuoteSpan(INSET_WIDTH * 2 / 3, notifyColor), it.afterStartIndex, it.afterEndIndex, 0)
+                        Bullet -> setSpan(BulletSpanWithRadius(INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        Number -> {
+                            val mRowNumber = it.markDown.getAttribute(it.beforeText)
+                            if (mRowNumber.isNotEmpty()) {
+                                setSpan(NumberedSpan("$mRowNumber.", INSET_WIDTH), it.afterStartIndex, it.afterEndIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                            }
                         }
-                        j++
-                    }
-                }
-                urls[i] = thisUrl
-
-            }
-            return urls
-        }
-
-        private fun transform(text: String, urls: MutableList<PatternDescriptor>, color: Int): SpannableString {
-            val checkedUrls = calculateOffset(urls)
-            val descriptors: MutableList<PatternSpanDescriptor> = mutableListOf()
-            var urlText: String
-            var textToCheck = text
-            checkedUrls.forEach { url ->
-                urlText = url.toTag()
-                if (textToCheck.indexOf(urlText) != -1) {
-                    val parts = textToCheck.split(urlText)
-                    if (parts.isNotEmpty()) {
-                        textToCheck = parts[0] + url.getLabelToDisplay() + parts.drop(1).joinToString(separator = urlText)
-                        val element = PatternSpanDescriptor(
-                                parts[0].length - howManyLevelsIn(url) - url.offset,
-                                parts[0].length + url.getLabelToDisplay().length - howManyLevelsIn(url) - url.offset,
-                                url.content,
-                                url.label,
-                                url.isLink,
-                                url.isBold,
-                                url.isItalic,
-                                url.isStroke,
-                                url.isQuote
-                        )
-                        descriptors.add(element)
+                        Link -> {
+                            setSpan(CustomUrlSpan(it.markDown.getAttribute(it.beforeText)), it.afterStartIndex, it.afterEndIndex, 0)
+                            setSpan(ForegroundColorSpan(notifyColor), it.afterStartIndex, it.afterEndIndex, 0)
+                        }
                     }
                 }
             }
-
-            val spannableString = SpannableString(textToCheck)
-
-            descriptors.forEach { content ->
-
-                if (content.isLink) {
-                    if (content.content.startsWith("https://appear.in")) {
-                        spannableString.setSpan(CustomUrlSpan(content.content), content.startIndex, content.endIndex, 0)
-                    } else {
-                        spannableString.setSpan(URLSpan(content.content), content.startIndex, content.endIndex, 0)
-                    }
-                    spannableString.setSpan(ForegroundColorSpan(color), content.startIndex, content.endIndex, 0)
-                    spannableString.setSpan(ForegroundColorSpan(color), content.startIndex, content.endIndex, 0)
-
-                    spannableString.getSpans(0, textToCheck.length, URLSpan::class.java)
-                }
-                if (content.isBold) {
-                    spannableString.setSpan(StyleSpan(Typeface.BOLD), content.startIndex, content.endIndex, 0)
-                }
-                if (content.isItalic) {
-                    spannableString.setSpan(StyleSpan(Typeface.ITALIC), content.startIndex, content.endIndex, 0)
-                }
-                if (content.isStroke) {
-                    spannableString.setSpan(StrikethroughSpan(), content.startIndex, content.endIndex, 0)
-                }
-                if (content.isQuote) {
-                    spannableString.setSpan(LeadingMarginSpan.Standard(QUOTE_INSET, QUOTE_INSET), content.startIndex, content.endIndex, 0)
-                }
-            }
-
-            return transformCommandLike(spannableString)
+            return output
         }
 
-        private fun transformCommandLike(spannableString: SpannableString): SpannableString {
-            val text = spannableString.toString()
-            val pattern = Pattern.compile("(/(.*?)\\s)|(/(.*+))")
+        fun getLineSpan(singleLine: String): Pair<String, MutableList<MarkDownPattern>> {
+            val spans: MutableList<MarkDownPattern> = mutableListOf()
+            val sequentSpans: MutableList<MarkDownPattern> = mutableListOf()
+            val sequentSpansOrder: MutableList<MarkDownPatternIndexer> = mutableListOf()
+            val lineOutput: String = singleLine.stripMarkdown(SUPPORTED_MARKDOWNS)
+            var output: String = singleLine
 
-            val matcher = pattern.matcher(text)
-            var group: String
-            while (matcher.find()) {
-                group = matcher.group()
-                if (!group.startsWith("//")) { // its url
-                    val indexOf = text.indexOf(group)
-                    spannableString.setSpan(NonbreakingSpan(), indexOf, indexOf + group.length, 0)
+            SINGLE_LINE_MARKDOWNS.forEach {
+                val matches = it.matches(singleLine)
+                if (matches) {
+                    val memoryText = output
+                    output = it.getLabel(output)
+
+                    val stripMarkdown = output.stripMarkdown(SUPPORTED_MARKDOWNS)
+                    spans.add(MarkDownPattern(stripMarkdown, 0, stripMarkdown.length, it, memoryText))
+                    return@forEach // there is only one single line markdown
                 }
             }
-            return spannableString
-        }
-    }
 
-    data class PatternSpanDescriptor(val startIndex: Int, val endIndex: Int, val content: String,
-                                     val label: String? = null, val isLink: Boolean = true,
-                                     val isBold: Boolean = false, val isItalic: Boolean = false,
-                                     val isStroke: Boolean = false,
-                                     val isQuote: Boolean = false)
-
-    data class PatternDescriptor(var content: String, val label: String? = null,
-                                 var isLink: Boolean = true, var isBold: Boolean = false,
-                                 var isItalic: Boolean = false, var isStroke: Boolean = false,
-                                 var isQuote: Boolean = false,
-                                 var beginIndex: Int = 0, var endIndex: Int = 0, var offset: Int = 0, @MarkDown.MarkDowns var surrounding: Long = MarkDown.NONE) {
-        fun toTag(): String {
-            if (content.contains("|")) {
-                content = content.split("|")[1]
-            }
-            return when (surrounding) {
-                MarkDown.LINK -> {
-                    var swapData = "<$content"
-                    label?.run {
-                        swapData += "|$label"
-                    }
-                    swapData + ">"
+            SUBSEQUENT_MARKDOWNS.forEach {
+                var matches = it.find(output)
+                while (matches != null) {
+                    log("$it MATCHES ${matches.value} ${matches.range}")
+                    sequentSpansOrder.add(MarkDownPatternIndexer(matches.range.first, it))
+                    matches = matches.next()
                 }
-                MarkDown.BOLD -> "*$content*"
-                MarkDown.ITALIC -> "_${content}_"
-                MarkDown.STROKE -> "~$content~"
-                MarkDown.QUOTE -> "&gt;$content"
-                else -> content
             }
-        }
 
-        fun getLabelToDisplay(): String {
-            return label ?: content
+            val orderedMarkdowns: MutableList<MarkDownPatternIndexer> = sequentSpansOrder.sortedWith(compareBy { it.startIndex }).toMutableList()
+
+            log("$orderedMarkdowns", "ordered")
+            while (orderedMarkdowns.size > 0) {
+                val pattern = orderedMarkdowns.removeAt(0)
+                val find = pattern.markDown.find(output)
+                find?.run {
+                    paragraph()
+                    val newValue = pattern.markDown.getLabel(this.value)
+                    log(this.value + " -> " + newValue, "replace in output")
+                    output = output.replaceFirst(this.value, newValue)
+                    val strippedText = newValue.stripMarkdown(SUPPORTED_MARKDOWNS)
+                    sequentSpans.add(
+                            MarkDownPattern(strippedText, range.first, range.first + strippedText.length, pattern.markDown, this.value)
+                    )
+                }
+            }
+
+            log("", "all spans")
+            spans.addAll(sequentSpans)
+            spans.forEach { pattern ->
+                with(pattern) {
+                    log("$afterText $afterStartIndex..$afterEndIndex - $markDown")
+                }
+            }
+            separator()
+            log(output, "output")
+            return Pair(lineOutput, spans)
         }
     }
 }
+
+data class MarkDownPatternIndexer(val startIndex: Int, val markDown: MarkDown)
+data class MarkDownPattern(val afterText: String, val afterStartIndex: Int, val afterEndIndex: Int, val markDown: MarkDown, val beforeText: String)
+data class SingleLinePattern(val text: String, val patterns: MutableList<MarkDownPattern>)
+
+fun String.stripMarkdown(markDowns: List<MarkDown>, isMultiLine: Boolean = false): String {
+    var group: String
+    var valueList: List<String> = listOf(this)
+    val outputList: MutableList<String> = mutableListOf()
+
+    if(isMultiLine && this.contains(MessageTextUtils.LINE_DELIMITER)){
+        valueList = this.split(MessageTextUtils.LINE_DELIMITER)
+    }
+
+    valueList.forEach { lineValue ->
+        var line = lineValue
+        markDowns.forEach {
+            val matcher = Pattern.compile(it.getRegex()).matcher(line)
+            while (matcher.find()) {
+                group = matcher.group()
+
+                line = line.replace(group, it.getLabel(group))
+            }
+        }
+        outputList.add(line)
+    }
+    return outputList.joinToString( MessageTextUtils.LINE_DELIMITER )
+}
+
+

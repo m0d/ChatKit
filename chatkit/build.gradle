@@ -48,7 +48,7 @@ dependencies {
     implementation "com.android.support:design:$supportVersion"
     implementation "com.google.android:flexbox:$flexboxVersion"
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "com.github.ajalt:timberkt:$timberkt_version"
 
     testCompile "junit:junit:$junit_version"
@@ -57,4 +57,6 @@ dependencies {
     /* Rx */
     implementation "io.reactivex.rxjava2:rxandroid:$rxandroid2_version"
     implementation "io.reactivex.rxjava2:rxjava:$rxjava2_version"
+
+
 }
