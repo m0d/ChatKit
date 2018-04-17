@@ -1,10 +1,10 @@
 package com.stfalcon.chatkit
 
 import com.stfalcon.chatkit.messages.markdown.*
+import com.stfalcon.chatkit.messages.markdown.Number
 import com.stfalcon.chatkit.messages.utils.MarkDownPattern
 import com.stfalcon.chatkit.messages.utils.MessageTextUtils
 import com.stfalcon.chatkit.messages.utils.MessageTextUtils.Companion.LINE_DELIMITER
-import com.stfalcon.chatkit.messages.utils.MessageTextUtils.Companion.fromEntities
 import com.stfalcon.chatkit.messages.utils.MessageTextUtils.Companion.getLineSpan
 import com.stfalcon.chatkit.messages.utils.MessageTextUtils.Companion.toLinePatterns
 import com.stfalcon.chatkit.messages.utils.stripMarkdown
@@ -43,8 +43,8 @@ class MessageTextUtilsTest {
                 "-~_test fraze *<https://www.google.com>*_~",
                 ">test1 _*<http://example.com/test/path>*_\n-*after* <https://www.google.com|Terefere qq?>",
                 ">test1 alibaba _*test2*_ _*test3*_ ~*_test4_*~\n~test5 *_test6_*~",
-                "-test1\n-test2\n-test3\n&gt;test <test>",
-                "-test1\n-test2\n-test3\n&gt;test >test",
+                "-test1\n-test2\n-test3\n>test <test>",
+                "-test1\n-test2\n-test3\n>test >test",
                 "1.test1 *<https://www.google.com>*\n2.test2 <https://www.google.com>\n-test3"
         )
 
@@ -130,7 +130,7 @@ class MessageTextUtilsTest {
     fun stripMarkdown() {
         INPUT.forEachIndexed { index, fraze ->
             val expectedResult = OUTPUT[index].first
-            val realResult = fromEntities(fraze).stripMarkdown(MessageTextUtils.SUPPORTED_MARKDOWNS, true)
+            val realResult = fraze.stripMarkdown(MessageTextUtils.SUPPORTED_MARKDOWNS, true)
             assertEquals(expectedResult, realResult)
         }
     }
@@ -139,16 +139,9 @@ class MessageTextUtilsTest {
     fun spannableCountCheckTest() {
         INPUT.forEachIndexed { index, fraze ->
             val expectedResult = OUTPUT[index].second.size
-            val realResult = toLinePatterns(fromEntities(fraze)).toMutableList().sumBy { it.patterns.size }
+            val realResult = toLinePatterns(fraze).toMutableList().sumBy { it.patterns.size }
             assertEquals(expectedResult, realResult)
         }
-    }
-
-    @Test
-    fun entitiesTest() {
-        assertEquals("<test>", fromEntities("&lt;test&gt;"))
-        assertEquals("?test=test&test=test", fromEntities("?test=test&amp;test=test"))
-        assertEquals("paragraph\nparagraph", fromEntities("paragraph\u2029paragraph"))
     }
 
     @Test
@@ -161,7 +154,7 @@ class MessageTextUtilsTest {
                 val patterns : MutableList<MarkDownPattern> = mutableListOf()
                 val text : MutableList<String> = mutableListOf()
                 split.forEach{
-                    val element = getLineSpan(fromEntities(it))
+                    val element = getLineSpan(it)
                     text.add(element.first)
                     patterns.addAll(element.second)
                 }
