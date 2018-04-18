@@ -28,7 +28,7 @@ import java.util.regex.Pattern
 class MessageTextUtils {
 
     companion object {
-        const val DEBUG_LOG = false
+        private const val DEBUG_LOG = false
 
         internal val LINE_DELIMITER by lazy { System.lineSeparator() }
         val SUPPORTED_MARKDOWNS: List<MarkDown>   by lazy { listOf(Bold, Italic, Strike, Link, Quote, Bullet, Number) }

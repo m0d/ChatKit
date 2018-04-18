@@ -128,29 +128,29 @@ class MessageTextUtilsTest {
 
     @Test
     fun stripMarkdown() {
-        INPUT.forEachIndexed { index, fraze ->
+        INPUT.forEachIndexed { index, phrase ->
             val expectedResult = OUTPUT[index].first
-            val realResult = fraze.stripMarkdown(MessageTextUtils.SUPPORTED_MARKDOWNS, true)
+            val realResult = phrase.stripMarkdown(MessageTextUtils.SUPPORTED_MARKDOWNS, true)
             assertEquals(expectedResult, realResult)
         }
     }
 
     @Test
     fun spannableCountCheckTest() {
-        INPUT.forEachIndexed { index, fraze ->
+        INPUT.forEachIndexed { index, phrase ->
             val expectedResult = OUTPUT[index].second.size
-            val realResult = toLinePatterns(fraze).toMutableList().sumBy { it.patterns.size }
+            val realResult = toLinePatterns(phrase).toMutableList().sumBy { it.patterns.size }
             assertEquals(expectedResult, realResult)
         }
     }
 
     @Test
     fun lineSpanTest() {
-        INPUT.forEachIndexed { index, fraze ->
-            if (!fraze.contains(LINE_DELIMITER)) {
-                assertEquals(OUTPUT[index], getLineSpan(fraze))
+        INPUT.forEachIndexed { index, phrase ->
+            if (!phrase.contains(LINE_DELIMITER)) {
+                assertEquals(OUTPUT[index], getLineSpan(phrase))
             } else {
-                val split = fraze.split(LINE_DELIMITER)
+                val split = phrase.split(LINE_DELIMITER)
                 val patterns : MutableList<MarkDownPattern> = mutableListOf()
                 val text : MutableList<String> = mutableListOf()
                 split.forEach{
