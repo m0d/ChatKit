@@ -28,7 +28,7 @@ import java.util.regex.Pattern
 class MessageTextUtils {
 
     companion object {
-        const val DEBUG_LOG = false
+        private const val DEBUG_LOG = false
 
         internal val LINE_DELIMITER by lazy { System.lineSeparator() }
         val SUPPORTED_MARKDOWNS: List<MarkDown>   by lazy { listOf(Bold, Italic, Strike, Link, Quote, Bullet, Number) }
@@ -40,22 +40,21 @@ class MessageTextUtils {
         private fun separator() = log("----------------------------------------------------------")
         private fun paragraph() = log("-------------")
 
-        private val mEntityMap: Map<String, String> = mapOf(
-                "&gt;" to ">",
-                "&lt;" to "<",
-                "&amp;" to "&",
-                "\u2029" to "\n"
-        )
-
-        fun fromEntities(text: String): String {
-            var data = text
-            mEntityMap.forEach {
-                data = data.replace(it.key, it.value)
-            }
-            return data
+        fun fromEntities(text: CharSequence): CharSequence {
+            return TextUtils.replace(text, arrayOf(
+                    "&gt;",
+                    "&lt;",
+                    "&amp;",
+                    "\u2029"
+            ),arrayOf(
+                    ">",
+                    "<",
+                    "&",
+                    "\n"
+            ))
         }
 
-        fun applyTextTransformations(view: TextView, rawText: String, @ColorInt notifyColor: Int) {
+        fun applyTextTransformations(view: TextView, rawText: CharSequence, @ColorInt notifyColor: Int) {
             Single.fromCallable {
                 val text = EmojiTextUtils.transform(fromEntities(rawText))
                 MessageTextUtils.transform(text, notifyColor)
@@ -68,10 +67,19 @@ class MessageTextUtils {
                     }, { e -> w { "${e.message}" } })
         }
 
-        private fun transform(text: String, @ColorInt notifyColor: Int): CharSequence {
+        fun getTextTransformations(rawText: String?, @ColorInt notifyColor: Int): CharSequence? {
+            return if(rawText != null) {
+                val text = EmojiTextUtils.transform(fromEntities(rawText))
+                MessageTextUtils.transform(text, notifyColor)
+            }else{
+                null
+            }
+        }
+
+        private fun transform(text: CharSequence, @ColorInt notifyColor: Int): CharSequence {
             val data = fromEntities(text)
             separator()
-            log(data, "input")
+            log(data.toString(), "input")
             separator()
             val lines = toLinePatterns(fromEntities(text))
             val output: Array<CharSequence?> = arrayOfNulls(lines.size)
@@ -93,7 +101,7 @@ class MessageTextUtils {
             }
         }
 
-        fun toLinePatterns(text: String): MutableList<SingleLinePattern> {
+        fun toLinePatterns(text: CharSequence): MutableList<SingleLinePattern> {
             val textLines = text.split(LINE_DELIMITER)
             var extraChar: String
             val singleLines: MutableList<SingleLinePattern> = mutableListOf()

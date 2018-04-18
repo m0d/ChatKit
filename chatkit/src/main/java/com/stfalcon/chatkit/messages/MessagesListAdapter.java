@@ -114,6 +114,12 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
                 viewClickListenersArray);
     }
 
+    @Override
+    public void onViewRecycled(ViewHolder holder) {
+        holder.onRecycle();
+        super.onViewRecycled(holder);
+    }
+
     public int getMessagesCount() {
         int count = 0;
         for(Wrapper wrapper : items){

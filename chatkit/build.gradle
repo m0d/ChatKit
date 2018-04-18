@@ -7,7 +7,7 @@ group = 'com.github.m0d'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         minSdkVersion 19
@@ -39,7 +39,7 @@ ext {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     /* EventBus */
     implementation "org.greenrobot:eventbus:$eventbus_version"
@@ -51,7 +51,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "com.github.ajalt:timberkt:$timberkt_version"
 
-    testCompile "junit:junit:$junit_version"
+    testImplementation "junit:junit:$junit_version"
     testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
 
     /* Rx */

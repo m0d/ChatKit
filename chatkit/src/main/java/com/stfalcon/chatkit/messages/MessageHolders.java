@@ -1,11 +1,11 @@
 package com.stfalcon.chatkit.messages;
 
 import android.annotation.SuppressLint;
+import android.support.annotation.ColorInt;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewCompat;
 import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.util.SparseArray;
 import android.util.TypedValue;
@@ -22,7 +22,6 @@ import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.commons.ViewHolder;
 import com.stfalcon.chatkit.commons.models.IMessage;
 import com.stfalcon.chatkit.commons.models.MessageContentType;
-import com.stfalcon.chatkit.messages.utils.EmojiTextUtils;
 import com.stfalcon.chatkit.messages.utils.MessageTextUtils;
 import com.stfalcon.chatkit.utils.DateFormatter;
 import com.stfalcon.chatkit.utils.RoundedImageView;
@@ -31,6 +30,8 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import io.reactivex.Single;
 
 /*
  * Created by troy379 on 31.03.17.
@@ -532,7 +533,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                applyTextTransformation(text, message.getText(), Gravity.START, mStyle);
+                text.setText(message.getText());
             }
         }
 
@@ -559,12 +560,17 @@ public class MessageHolders {
     }
 
     @SuppressLint("RtlHardcoded")
-    public static void applyTextTransformation(TextView textView, String text, int gravity, MessagesListStyle style){
+    public static void applyTextTransformation(TextView textView, CharSequence text, int gravity, MessagesListStyle style){
         MessageTextUtils.Companion.applyTextTransformations(
                 textView,
                 text,
                 (gravity == Gravity.START || gravity == Gravity.LEFT) ? style.getIncomingTextLinkColor() :  style.getOutcomingTextLinkColor()
         );
+    }
+
+    @SuppressLint("RtlHardcoded")
+    public static CharSequence getTextTransformation(String text, int attributeColor){
+        return MessageTextUtils.Companion.getTextTransformations( text, attributeColor );
     }
 
     /**
@@ -590,7 +596,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                applyTextTransformation(text, message.getText(), Gravity.END, mStyle);
+                text.setText(message.getText());
             }
         }
 
