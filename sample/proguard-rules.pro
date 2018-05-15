@@ -29,3 +29,4 @@
 }
 
 -keep class com.stfalcon.chatkit.commons.events.OpenAppearIn { *; }
+-keep class com.stfalcon.chatkit.commons.events.OpenEdApp { *; }
