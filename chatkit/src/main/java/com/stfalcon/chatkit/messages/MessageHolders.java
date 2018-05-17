@@ -17,7 +17,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.github.siyamed.shapeimageview.mask.PorterShapeImageView;
 import com.stfalcon.chatkit.R;
 import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.commons.ViewHolder;
@@ -25,6 +24,7 @@ import com.stfalcon.chatkit.commons.models.IMessage;
 import com.stfalcon.chatkit.commons.models.MessageContentType;
 import com.stfalcon.chatkit.messages.utils.MessageTextUtils;
 import com.stfalcon.chatkit.utils.DateFormatter;
+import com.stfalcon.chatkit.utils.RoundedImageView;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -635,6 +635,15 @@ public class MessageHolders {
             super(itemView);
             image = itemView.findViewById(R.id.image);
             imageOverlay = itemView.findViewById(R.id.imageOverlay);
+
+            if (image != null && image instanceof RoundedImageView) {
+                ((RoundedImageView) image).setCorners(
+                        R.dimen.message_bubble_corners_radius,
+                        R.dimen.message_bubble_corners_radius,
+                        R.dimen.message_bubble_corners_radius,
+                        0
+                );
+            }
         }
 
         @Override
@@ -677,6 +686,15 @@ public class MessageHolders {
             super(itemView);
             image = itemView.findViewById(R.id.image);
             imageOverlay = itemView.findViewById(R.id.imageOverlay);
+
+            if (image != null && image instanceof RoundedImageView) {
+                ((RoundedImageView) image).setCorners(
+                        R.dimen.message_bubble_corners_radius,
+                        R.dimen.message_bubble_corners_radius,
+                        0,
+                        R.dimen.message_bubble_corners_radius
+                );
+            }
         }
 
         @Override
@@ -777,7 +795,6 @@ public class MessageHolders {
                     imageLoader.loadImage(userAvatar, message.getUser().getAvatar());
                 }
             }
-
         }
 
         @Override
