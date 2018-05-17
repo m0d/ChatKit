@@ -31,7 +31,6 @@ task wrapper(type: Wrapper) {
 ext {
     supportVersion = '27.0.2'
     picassoVersion = '2.5.2'
-    circleImageViewVersion = '2.1.0'
     shapeImageViewVersion = '0.9.3'
     circleindicatorVersion = '1.2.2@aar'
 }
