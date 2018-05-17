@@ -43,6 +43,7 @@ dependencies {
 
     /* EventBus */
     implementation "org.greenrobot:eventbus:$eventbus_version"
+    implementation "com.github.siyamed:android-shape-imageview:$shapeImageViewVersion"
 
     implementation "com.android.support:appcompat-v7:$supportVersion"
     implementation "com.android.support:design:$supportVersion"

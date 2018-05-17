@@ -30,3 +30,10 @@
 
 -keep class com.stfalcon.chatkit.commons.events.OpenAppearIn { *; }
 -keep class com.stfalcon.chatkit.commons.events.OpenEdApp { *; }
+
+-dontwarn android.support.v7.**
+-keep class android.support.v7.** { ; }
+-keep interface android.support.v7.* { ; }
+-keepattributes *Annotation,Signature
+-dontwarn com.github.siyamed.**
+-keep class com.github.siyamed.shapeimageview.**{ *; }
