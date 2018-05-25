@@ -8,6 +8,7 @@ import android.text.TextUtils
 import android.text.method.LinkMovementMethod
 import android.text.style.*
 import android.widget.TextView
+import com.github.ajalt.timberkt.Timber
 import com.github.ajalt.timberkt.w
 import com.stfalcon.chatkit.commons.spans.BulletSpanWithRadius
 import com.stfalcon.chatkit.commons.spans.CustomUrlSpan
@@ -141,7 +142,9 @@ class MessageTextUtils {
                             }
                         }
                         Link -> {
-                            setSpan(CustomUrlSpan(it.markDown.getAttribute(it.beforeText)), it.afterStartIndex, it.afterEndIndex, 0)
+                            val attribute = it.markDown.getAttribute(it.beforeText)
+                            Timber.e { "URL clicked attr --> $attribute" }
+                            setSpan(CustomUrlSpan(attribute), it.afterStartIndex, it.afterEndIndex, 0)
                             setSpan(ForegroundColorSpan(notifyColor), it.afterStartIndex, it.afterEndIndex, 0)
                         }
                     }
