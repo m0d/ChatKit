@@ -127,10 +127,8 @@ class MessageTextUtils {
 
         private fun addSpannables(text: String, patterns: MutableList<MarkDownPattern>, notifyColor: Int): CharSequence {
             val output = SpannableString(text)
-            Timber.e { "URL text --> $text" }
             patterns.forEach {
                 with(output) {
-                    Timber.e { "URL it.markDown --> ${it.markDown}" }
                     when (it.markDown) {
                         Bold -> setSpan(StyleSpan(Typeface.BOLD), it.afterStartIndex, it.afterEndIndex, 0)
                         Italic -> setSpan(StyleSpan(Typeface.ITALIC), it.afterStartIndex, it.afterEndIndex, 0)
@@ -144,9 +142,7 @@ class MessageTextUtils {
                             }
                         }
                         Link -> {
-                            val attribute = it.markDown.getAttribute(it.beforeText)
-                            Timber.e { "URL attr --> $attribute" }
-                            setSpan(CustomUrlSpan(attribute), it.afterStartIndex, it.afterEndIndex, 0)
+                            setSpan(CustomUrlSpan(it.markDown.getAttribute(it.beforeText)), it.afterStartIndex, it.afterEndIndex, 0)
                             setSpan(ForegroundColorSpan(notifyColor), it.afterStartIndex, it.afterEndIndex, 0)
                         }
                     }

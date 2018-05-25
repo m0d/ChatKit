@@ -15,12 +15,10 @@ import org.greenrobot.eventbus.EventBus
  */
 class CustomUrlSpan(customUl: String) : URLSpan(customUl) {
     override fun onClick(widget: View?) {
-        e { "URL clicked $url" }
         when {
             url.startsWith("https://appear.in") -> EventBus.getDefault().post(OpenAppearIn(url))
             url.startsWith("https://web.edapp.com/course/") -> EventBus.getDefault().post(OpenEdApp(url))
             else -> {
-                e { "URL clicked SUPER $url" }
                 super.onClick(widget)
             }
         }
