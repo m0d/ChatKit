@@ -555,6 +555,7 @@ public class MessageHolders {
                 text.setAutoLinkMask(style.getTextAutoLinkMask());
                 text.setLinkTextColor(style.getIncomingTextLinkColor());
                 configureLinksBehavior(text);
+                text.setMovementMethod(LinkMovementMethod.getInstance());
             }
         }
     }
@@ -618,6 +619,7 @@ public class MessageHolders {
                 text.setAutoLinkMask(style.getTextAutoLinkMask());
                 text.setLinkTextColor(style.getOutcomingTextLinkColor());
                 configureLinksBehavior(text);
+                text.setMovementMethod(LinkMovementMethod.getInstance());
             }
         }
     }
