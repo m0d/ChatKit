@@ -141,7 +141,7 @@ class MessageTextUtils {
                             }
                         }
                         Link -> {
-                            setSpan(CustomUrlSpan(it.markDown.getAttribute(it.afterText)), it.afterStartIndex, it.afterEndIndex, 0)
+                            setSpan(CustomUrlSpan(it.markDown.getAttribute(it.beforeText)), it.afterStartIndex, it.afterEndIndex, 0)
                             setSpan(ForegroundColorSpan(notifyColor), it.afterStartIndex, it.afterEndIndex, 0)
                         }
                     }

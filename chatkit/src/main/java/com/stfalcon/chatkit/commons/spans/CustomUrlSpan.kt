@@ -2,6 +2,7 @@ package com.stfalcon.chatkit.commons.spans
 
 import android.text.style.URLSpan
 import android.view.View
+import com.github.ajalt.timberkt.Timber.e
 import com.stfalcon.chatkit.commons.events.OpenAppearIn
 import com.stfalcon.chatkit.commons.events.OpenEdApp
 import org.greenrobot.eventbus.EventBus
@@ -14,10 +15,14 @@ import org.greenrobot.eventbus.EventBus
  */
 class CustomUrlSpan(customUl: String) : URLSpan(customUl) {
     override fun onClick(widget: View?) {
+        e { "URL clicked $url" }
         when {
             url.startsWith("https://appear.in") -> EventBus.getDefault().post(OpenAppearIn(url))
             url.startsWith("https://web.edapp.com/course/") -> EventBus.getDefault().post(OpenEdApp(url))
-            else -> super.onClick(widget)
+            else -> {
+                e { "URL clicked SUPER $url" }
+                super.onClick(widget)
+            }
         }
     }
 }
